@@ -1,0 +1,35 @@
+##
+# This build uses gradle wrapper
+# To build run below command
+##
+gradlew build
+
+##
+# Build but skip tests
+##
+gradlew build -x test
+
+##
+# Setting a system property of taskName.debug will run the tests in debug mode, suspended and listening on port 5005.
+# For example:
+##
+gradle test -Dtest.single=FixPomMergeConflictsSpock -Dtest.debug
+
+
+##
+# Deploy to Sonatype Nexus repo
+# requires sonatypeUsername and sonatypePassword proeprties to be set in ~/.gradle/gradle.properties
+##
+./gradlew build -x test upload
+gradle upload
+
+
+##
+# Build & Publish to local Maven repo
+##
+gradlew build -x test publishToMavenLocal
+
+##
+#
+##
+gradle clean pP publish

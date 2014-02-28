@@ -1,0 +1,115 @@
+import org.gradle.api.artifacts.maven.MavenDeployment
+
+apply plugin: 'groovy'
+apply plugin: 'maven'
+apply plugin: 'signing'
+//apply plugin: 'maven-publish'
+
+sourceCompatibility = 1.5
+targetCompatibility = 1.5
+
+task wrapper(type: Wrapper) {
+    gradleVersion = '1.10'
+}
+
+// dependency management as you like
+repositories {
+    mavenCentral ()
+}
+
+dependencies {
+    compile 'org.codehaus.groovy:groovy-all:2.0.1'
+    compile 'org.apache.maven:maven-artifact:3.1.1'
+    compile 'org.slf4j:slf4j-api:1.7.6'
+
+    // http://www.slf4j.org/faq.html#configure_logging
+    testCompile 'ch.qos.logback:logback-classic:1.1.1'
+    testCompile 'ch.qos.logback:logback-core:1.1.1'
+
+    testCompile "org.spockframework:spock-core:0.7-groovy-2.0"
+    testCompile 'junit:junit:4.11'
+    testCompile 'org.eclipse.mylyn.github:org.eclipse.egit.github.core:2.1.5'
+}
+
+
+task sourcesJar(type: Jar, dependsOn: classes) {
+    classifier = 'sources'
+    from sourceSets.main.allSource
+}
+
+task javadocJar(type: Jar, dependsOn: javadoc) {
+    classifier = 'javadoc'
+    from javadoc.destinationDir
+}
+
+task groovydocJar(type: Jar, dependsOn: groovydoc) {
+    classifier = 'groovydoc'
+    from groovydoc.destinationDir
+}
+
+artifacts {
+    archives jar, sourcesJar, javadocJar, groovydocJar
+}
+
+signing {
+    required {
+        gradle.taskGraph.hasTask("uploadArchives")
+    }
+    sign configurations.archives
+}
+
+// Sonatype upload details:
+// http://jedicoder.blogspot.de/2011/11/automated-gradle-project-deployment-to.html
+// https://support.sonatype.com/entries/21580432-how-do-i-configure-my-gradle-build-to-publish-artifacts-to-nexus
+// https://support.sonatype.com/entries/21597257-how-do-i-stage-artifacts-to-a-nexus-staging-profile-from-a-gradle-build
+// https://support.sonatype.com/entries/21596297-how-do-i-configure-my-gradle-build-to-download-artifacts-from-nexus
+
+//      * Deploy snapshot artifacts into repository https://oss.sonatype.org/content/repositories/snapshots
+//      * Deploy release artifacts into the staging repository https://oss.sonatype.org/service/local/staging/deploy/maven2
+//      * Promote staged artifacts into repository 'Releases'
+//      * Download snapshot and release artifacts from group https://oss.sonatype.org/content/groups/public
+//      * Download snapshot, release and staged artifacts from staging group https://oss.sonatype.org/content/groups/staging
+uploadArchives {
+    repositories {
+        mavenDeployer {
+            beforeDeployment { MavenDeployment deployment -> signing.signPom(deployment) }
+
+            snapshotRepository(url: 'https://oss.sonatype.org/content/repositories/snapshots/') {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            repository(url: 'https://oss.sonatype.org/service/local/staging/deploy/maven2/') {
+                authentication(userName: sonatypeUsername, password: sonatypePassword)
+            }
+
+            pom.groupId = 'com.dkirrane.groovy.gitflow'
+            pom.artifactId = 'ggitflow'
+<<<<<<< HEAD
+            pom.version = '1.0'
+=======
+            pom.version = '1.0-SNAPSHOT'
+>>>>>>> release/1.0
+
+            pom.project {
+                name "${pom.groupId}";
+                packaging "jar";
+                description "Groovy implementation of the Gitflow branching model";
+                url "https://github.com/dkirrane/ggitflow";
+                licenses {
+                    license {
+                        name 'GNU GENERAL PUBLIC LICENSE'
+                        url 'http://www.gnu.org/licenses/gpl.txt'
+                        distribution 'repo'
+                    }
+                }
+                developers {
+                    developer {
+                        id "dkirrane";
+                        name "dkirrane";
+                        email "desmond dot kirrane @ gmail.com";
+                    }
+                }
+            }
+        }
+    }
+}

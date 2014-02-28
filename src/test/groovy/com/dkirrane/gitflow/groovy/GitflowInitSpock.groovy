@@ -1,0 +1,141 @@
+/* 
+ * Copyright (C) 2014 Desmond Kirrane
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package com.dkirrane.gitflow.groovy
+
+import org.junit.ClassRule
+import org.junit.Rule
+import org.junit.rules.TemporaryFolder
+import spock.lang.Shared
+import spock.lang.Specification
+import spock.lang.Stepwise
+import com.dkirrane.gitflow.groovy.ex.GitflowException
+import groovy.util.logging.Slf4j
+
+/**
+ *
+ */
+@Stepwise
+@Slf4j
+class GitflowInitSpock extends Specification  {
+    @Rule TemporaryFolder tempFolder = new TemporaryFolder()
+    def repoDir
+
+    def setup() {
+        log.info 'setup'
+        tempFolder.create();
+        repoDir = tempFolder.newFolder("repo");
+        repoDir.mkdirs()
+
+        log.info "repoDir = $repoDir"
+        def process = "git init".execute(null, repoDir)
+        process.waitForOrKill(10000L)
+    }
+
+    def cleanup() {
+        tempFolder.delete()
+    }
+
+    def "Create Git repo"() {
+        expect:
+        assert (new File(repoDir, ".git").exists())
+    }
+
+    def "Gitflow init"() {
+        given: "GitflowInit"
+        def gitflowInit = new GitflowInit(repoDir:repoDir)
+
+        when: "init is called"
+        gitflowInit.cmdDefault()
+
+        then: "the master branch should be called master"
+        def masterBranch1 = gitflowInit.getMasterBranch()
+        def masterBranch = "git config --get gitflow.branch.master".execute(null, repoDir).text.trim()
+        masterBranch1 == masterBranch
+        masterBranch == "master"
+
+        and: "the develop branch should be called develop"
+        def developBranch = "git config --get gitflow.branch.develop".execute(null, repoDir).text.trim()
+        developBranch == "develop"
+
+        and: "the feature prefix should be called feature/"
+        def featurePrefix = "git config --get gitflow.prefix.feature".execute(null, repoDir).text.trim()
+        featurePrefix == "feature/"
+
+        and: "the release prefix should be called release/"
+        def releasePrefix = "git config --get gitflow.prefix.release".execute(null, repoDir).text.trim()
+        releasePrefix == "release/"
+
+        and: "the hotfix prefix should be called hotfix/"
+        def hotfixPrefix = "git config --get gitflow.prefix.hotfix".execute(null, repoDir).text.trim()
+        hotfixPrefix == "hotfix/"
+
+        and: "the support prefix should be called support/"
+        def supportPrefix = "git config --get gitflow.prefix.support".execute(null, repoDir).text.trim()
+        supportPrefix == "support/"
+
+        and: "the version tag prefix should be called an empty string"
+        def versionTagPrefix = "git config --get gitflow.prefix.versiontag".execute(null, repoDir).text.trim()
+        versionTagPrefix == ""
+
+        and: "the master and develop branches should exist"
+        List branches = gitflowInit.gitAllBranches();
+        branches.sort() == ["develop", "master"].sort()
+    }
+
+    def "Gitflow init without defaults"() {
+        given: "GitflowInit"
+        def gitflowInit = new GitflowInit(repoDir:repoDir,masterBrnName:'production',developBrnName:'integration',featureBrnPref:'feat/',releaseBrnPref:'rel/',hotfixBrnPref:'fix/',supportBrnPref:'maintenance/',versionTagPref:'version')
+
+        when: "init is called"
+        gitflowInit.cmdDefault()
+
+        then: "the master branch should be called master"
+        def masterBranch1 = gitflowInit.getMasterBranch()
+        def masterBranch = "git config --get gitflow.branch.master".execute(null, repoDir).text.trim()
+        masterBranch1 == masterBranch
+        masterBranch == "production"
+
+        and: "the develop branch should be called develop"
+        def developBranch = "git config --get gitflow.branch.develop".execute(null, repoDir).text.trim()
+        developBranch == "integration"
+
+        and: "the feature prefix should be called feature/"
+        def featurePrefix = "git config --get gitflow.prefix.feature".execute(null, repoDir).text.trim()
+        featurePrefix == "feat/"
+
+        and: "the release prefix should be called release/"
+        def releasePrefix = "git config --get gitflow.prefix.release".execute(null, repoDir).text.trim()
+        releasePrefix == "rel/"
+
+        and: "the hotfix prefix should be called hotfix/"
+        def hotfixPrefix = "git config --get gitflow.prefix.hotfix".execute(null, repoDir).text.trim()
+        hotfixPrefix == "fix/"
+
+        and: "the support prefix should be called support/"
+        def supportPrefix = "git config --get gitflow.prefix.support".execute(null, repoDir).text.trim()
+        supportPrefix == "maintenance/"
+
+        and: "the version tag prefix should be called an empty string"
+        def versionTagPrefix = "git config --get gitflow.prefix.versiontag".execute(null, repoDir).text.trim()
+        versionTagPrefix == "version"
+
+        and: "the master and develop branches should exist"
+        List branches = gitflowInit.gitAllBranches();
+        branches.sort() == ["integration", "production"].sort()
+    }
+}
+
