@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html>
+
+  <head>
+    <meta charset='utf-8' />
+    <meta http-equiv="X-UA-Compatible" content="chrome=1" />
+    <meta name="description" content="Groovy Gitflow : Groovy implementation of the Gitflow branching model" />
+
+    <link rel="stylesheet" type="text/css" media="screen" href="stylesheets/stylesheet.css">
+
+    <title>Groovy Gitflow</title>
+  </head>
+
+  <body>
+
+    <!-- HEADER -->
+    <div id="header_wrap" class="outer">
+        <header class="inner">
+          <a id="forkme_banner" href="https://github.com/dkirrane/ggitflow">View on GitHub</a>
+
+          <h1 id="project_title">Groovy Gitflow</h1>
+          <h2 id="project_tagline">Groovy implementation of the Gitflow branching model</h2>
+
+            <section id="downloads">
+              <a class="zip_download_link" href="https://github.com/dkirrane/ggitflow/zipball/master">Download this project as a .zip file</a>
+              <a class="tar_download_link" href="https://github.com/dkirrane/ggitflow/tarball/master">Download this project as a tar.gz file</a>
+            </section>
+        </header>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div id="main_content_wrap" class="outer">
+      <section id="main_content" class="inner">
+        <h3>
+<a name="groovy-gitflow" class="anchor" href="#groovy-gitflow"><span class="octicon octicon-link"></span></a>Groovy Gitflow</h3>
+
+<p>GGitflow provides a Groovy implementation for Vincent Driessen's branching model 
+<a href="http://nvie.com/posts/a-successful-git-branching-model/">http://nvie.com/posts/a-successful-git-branching-model/</a></p>
+
+<h3>
+<a name="initialise-repository-for-gitflow" class="anchor" href="#initialise-repository-for-gitflow"><span class="octicon octicon-link"></span></a>Initialise repository for Gitflow</h3>
+
+<pre><code>// Use default branch and prefix names for Gitflow
+def repoDir = new File("/path/to/git/repo/base/directory")
+def init = new GitflowInit(repoDir:repoDir)
+init.cmdDefault()
+
+// Use your own preferred branch and prefix names for Gitflow
+def init = new GitflowInit(repoDir:repoDir,masterBrnName:'production',developBrnName:'integration',featureBrnPref:'feat/',releaseBrnPref:'rel/',hotfixBrnPref:'fix/',supportBrnPref:'maintenance/',versionTagPref:'version')
+init.cmdDefault()
+</code></pre>
+
+<h3>
+<a name="start--finish-a-feature-branch" class="anchor" href="#start--finish-a-feature-branch"><span class="octicon octicon-link"></span></a>Start &amp; Finish a Feature branch</h3>
+
+<pre><code>def feature = new GitflowFeature(init:init)
+feature.start("JIRA-123")
+feature.finish("JIRA-123")
+</code></pre>
+
+<h3>
+<a name="start--finish-a-release-branch" class="anchor" href="#start--finish-a-release-branch"><span class="octicon octicon-link"></span></a>Start &amp; Finish a Release branch</h3>
+
+<pre><code>def release = new GitflowRelease(init:init)
+release.start("1.0")
+release.finish("1.0")
+</code></pre>
+
+<h3>
+<a name="start--finish-a-hotfix-branch" class="anchor" href="#start--finish-a-hotfix-branch"><span class="octicon octicon-link"></span></a>Start &amp; Finish a Hotfix branch</h3>
+
+<pre><code>def hotfix = new GitflowHotfix(init:init)
+hotfix.start("1.0.1")
+hotfix.finish("1.0.1")
+</code></pre>
+
+<h3>
+<a name="start-a-support-branch" class="anchor" href="#start-a-support-branch"><span class="octicon octicon-link"></span></a>Start a Support branch</h3>
+
+<pre><code>def support = new GitflowSupport(init:init, startCommit:"1.0")
+support.start("")
+</code></pre>
+
+<h3>
+<a name="authors-and-contributors" class="anchor" href="#authors-and-contributors"><span class="octicon octicon-link"></span></a>Authors and Contributors</h3>
+
+<p>Desmond (Dessie) Kirrane (<a href="https://github.com/dkirrane" class="user-mention">@dkirrane</a>)</p>
+      </section>
+    </div>
+
+    <!-- FOOTER  -->
+    <div id="footer_wrap" class="outer">
+      <footer class="inner">
+        <p class="copyright">Groovy Gitflow maintained by <a href="https://github.com/dkirrane">dkirrane</a></p>
+        <p>Published with <a href="http://pages.github.com">GitHub Pages</a></p>
+      </footer>
+    </div>
+
+    
+
+  </body>
+</html>
