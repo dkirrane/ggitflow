@@ -58,9 +58,8 @@ class GitflowFeature {
         def master = init.getMasterBranch()
         if(startCommit) {
             def scOnDevelop = init.gitIsBranchMergedInto(startCommit,develop)
-            def scOnMaster = init.gitIsBranchMergedInto(startCommit,master)
-            if(!scOnDevelop || !scOnMaster){
-                throw new GitflowException("Given start commit '${startCommit}' is not a valid commit on '${develop}' or .")
+            if(!scOnDevelop){
+                throw new GitflowException("Given start commit '${startCommit}' is not a valid commit on '${develop}'.")
             }
         } else {
             startCommit = develop
