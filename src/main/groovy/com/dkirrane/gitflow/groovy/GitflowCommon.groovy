@@ -51,7 +51,7 @@ class GitflowCommon {
         process.consumeProcessOutput(standard, error)
         process.waitFor()
 
-        log.info standard.toString()
+        log.debug standard.toString()
         log.debug "Exit code: " + process.exitValue()
         if(!ignoreExitCode){
             if (process.exitValue() != 0){
