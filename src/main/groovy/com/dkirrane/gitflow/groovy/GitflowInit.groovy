@@ -41,7 +41,7 @@ class GitflowInit extends GitflowCommon {
         super.requireGitRepo()
 
         if(super.gitflowIsInitialized()) {
-            log.info "Skipping. Already initialized for gitflow."
+            log.info "Gitflow is already initialized"
             //            log.info "WARN To force reinitialization, use: git flow init -f"
             return
         }

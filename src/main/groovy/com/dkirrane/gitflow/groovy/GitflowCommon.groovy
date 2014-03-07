@@ -83,7 +83,7 @@ class GitflowCommon {
         process.consumeProcessOutput(standard, error)
         process.waitForOrKill(EXE_TIMEOUT)
 
-        log.info standard.toString()
+        log.debug standard.toString()
         log.debug "Exit code: " + process.exitValue()
 
         if(error.toString()) {
