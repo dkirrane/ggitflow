@@ -87,7 +87,7 @@ class GitflowCommon {
         log.debug "Exit code: " + process.exitValue()
 
         if(error.toString()) {
-            log.error error.toString()
+            log.warn error.toString()
         }
 
         return process.exitValue()
@@ -347,7 +347,7 @@ class GitflowCommon {
         def support = getSupportBranchPrefix()
         def versiontag = getVersionTagPrefix()
         
-        LOG.info("Prefixes feature={}, release={}, hotfix={}, support={}, versiontag={}", feature, release, hotfix, support, versiontag)
+        log.info("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
 
         if(feature && release && hotfix && support){
             return true
