@@ -227,19 +227,28 @@ class GitflowFeature {
 
         init.executeLocal("git checkout -q ${featureBranchName}")
 
-        def opts = ""
+        def opts
         if(isInteractive){
             opts = "-i"
         }
 
         def develop = init.getDevelopBranch()
-        Integer rebaseExitCode = init.executeRemote("git rebase ${opts} ${develop}")
-        if(!rebaseExitCode){
+        
+        Integer rebaseExitCode
+        if(opts) {
+            rebaseExitCode = init.executeRemote("git rebase ${opts} ${develop}")            
+        } else {
+            rebaseExitCode = init.executeRemote("git rebase ${develop}")
+        }
+        
+        if(rebaseExitCode != 0){
             log.warn "WARN: Finish was aborted due to conflicts during rebase."
             log.warn "WARN: Please finish the rebase manually now."
             log.warn "WARN: When finished, re-run:"
             log.warn "WARN: mvn ggitflow:feature-finish"
             throw new GitflowException("Rebase feature onto develop has conflicts")
+        } else {
+            log.debug "Rebase complete"
         }
     }
 
