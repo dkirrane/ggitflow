@@ -259,7 +259,7 @@ class GitflowFeature {
 
         // delete branch
         def origin = init.getOrigin()
-        if(origin){
+        if(origin && !keep){
             init.executeRemote("git push ${origin} :refs/heads/${featureBranchName}")
         }
 
