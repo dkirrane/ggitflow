@@ -113,7 +113,6 @@ class GitflowHotfix {
         log.info "- You are now on branch '${hotfixBranch}'"
         log.info ""
         log.info "Follow-up actions:"
-        log.info "- Bump the version number now!"
         log.info "- Start committing your hot fixes"
         log.info "- When done, run:"
         log.info ""

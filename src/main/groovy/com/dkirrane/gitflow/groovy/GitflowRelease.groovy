@@ -114,7 +114,6 @@ class GitflowRelease {
         log.info "- You are now on branch '${releaseBranch}'"
         log.info ""
         log.info "Follow-up actions:"
-        log.info "- Bump the version number now!"
         log.info "- Start committing last-minute fixes in preparing your release"
         log.info "- When done, run:"
         log.info ""
