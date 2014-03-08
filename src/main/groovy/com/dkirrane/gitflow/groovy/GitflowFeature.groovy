@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014 Desmond Kirrane
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@ package com.dkirrane.gitflow.groovy
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 import groovy.util.logging.Slf4j
+import java.io.File
 
 /**
  *
@@ -136,7 +137,7 @@ class GitflowFeature {
         }
 
         // detect if we're restoring from a merge conflict
-        File mergeBaseFile = new File(init.repoDir, ".git/.gitflow/MERGE_BASE")
+        File mergeBaseFile = new File(init.repoDir, ".git" + File.separator + ".gitflow" + File.separator + "MERGE_BASE")
         String mergeBasePath = mergeBaseFile.getCanonicalPath()
         if(mergeBaseFile.exists()) {
             if(init.gitIsCleanWorkingTree()){
@@ -155,16 +156,16 @@ class GitflowFeature {
                     // MERGE_BASE file and continuing normal execution of the finish
                     mergeBaseFile.delete()
                 }
+            } else {
+                log.warn ""
+                log.warn "Merge conflicts not resolved yet, use:"
+                log.warn "    git mergetool"
+                log.warn "    git commit"
+                log.warn ""
+                log.warn "You can then complete the finish by running feature finish again"
+                log.warn ""
+                //            System.exit(1)
             }
-        } else {
-            log.warn ""
-            log.warn "Merge conflicts not resolved yet, use:"
-            log.warn "    git mergetool"
-            log.warn "    git commit"
-            log.warn ""
-            log.warn "You can then complete the finish by running feature finish again"
-            log.warn ""
-            //            System.exit(1)
         }
 
         if(!init.gitIsCleanWorkingTree()){
