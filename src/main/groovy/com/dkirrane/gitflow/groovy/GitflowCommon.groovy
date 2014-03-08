@@ -346,6 +346,8 @@ class GitflowCommon {
         def hotfix = getHotfixBranchPrefix()
         def support = getSupportBranchPrefix()
         def versiontag = getVersionTagPrefix()
+        
+        LOG.info("Prefixes feature={}, release={}, hotfix={}, support={}, versiontag={}", feature, release, hotfix, support, versiontag)
 
         if(feature && release && hotfix && support){
             return true

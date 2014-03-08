@@ -132,8 +132,7 @@ class GitflowFeature {
 
         // sanity checks
         if(!init.gitBranchExists(featureBranch)){
-            log.error "ERROR: feature branch ${featureBranch} does not exist"
-            return;
+            throw new GitflowException("Feature branch " + featureBranch + " does not exist")
         }
 
         // detect if we're restoring from a merge conflict
@@ -169,8 +168,7 @@ class GitflowFeature {
         }
 
         if(!init.gitIsCleanWorkingTree()){
-            log.error "Need a clean working tree"
-            return
+            throw new GitflowException("Failed to finish. Need a clean working tree")
         }
 
         // update local repo with remote changes
