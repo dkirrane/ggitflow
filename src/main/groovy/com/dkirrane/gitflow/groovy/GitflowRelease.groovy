@@ -118,7 +118,7 @@ class GitflowRelease {
         log.info "- Start committing last-minute fixes in preparing your release"
         log.info "- When done, run:"
         log.info ""
-        log.info "     git flow release finish '${releaseBranch}'"
+        log.info "     mvn ggitflow:release-finish"
         log.info ""
 
     }

@@ -117,7 +117,7 @@ class GitflowHotfix {
         log.info "- Start committing your hot fixes"
         log.info "- When done, run:"
         log.info ""
-        log.info "     git flow hotfix finish '${hotfixBranchName}'"
+        log.info "     mvn ggitflow:hotfix-finish"
         log.info ""
 
     }
