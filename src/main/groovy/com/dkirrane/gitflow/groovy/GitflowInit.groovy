@@ -54,7 +54,7 @@ class GitflowInit extends GitflowCommon {
         supportBrnPref = supportBrnPref?.trim() ?: DEFAULT_SUPPORT_BRN_PREFIX
         versionTagPref = versionTagPref?.trim() ?: DEFAULT_VERSION_TAG_PREFIX
 
-        log.info "Initializing Gitflow for repo '${repoDir}'."
+        log.info "Initialising Gitflow for repo '${repoDir}'."
         log.info "Gitflow Config:"
         log.info "\t Master branch '${masterBrnName}'"
         log.info "\t Develop branch '${developBrnName}'"
@@ -70,7 +70,7 @@ class GitflowInit extends GitflowCommon {
         // add a master branch if no such branch exists yet
         def masterBranch = super.getMasterBranch()
         if( masterBranch?.trim() ) {
-            log.debug "WARN master branch '${masterBranch}' already configured."
+            log.debug "master branch '${masterBranch}' already configured."
         } else {
             if(super.gitAllBranches().size() == 0){
                 log.debug "No branches exist yet. Master branch must be created now."
@@ -95,7 +95,7 @@ class GitflowInit extends GitflowCommon {
         // add a develop branch if no such branch exists yet
         def developBranch = super.getDevelopBranch()
         if( developBranch?.trim() ) {
-            log.debug "WARN develop branch '${developBranch}' already configured."
+            log.debug "develop branch '${developBranch}' already configured."
         } else {
             if(super.gitAllBranches().minus(["${masterBrnName}","${origin}/${masterBrnName}"]).size() == 0){
                 log.debug "No branches exist yet. Base branches must be created now."

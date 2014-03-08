@@ -380,6 +380,7 @@ class GitflowCommon {
     }
 
     void requireGitRepo() {
+        log.debug("Verifying we are in a Git repo")
         try {
             executeLocal("git rev-parse --git-dir")
         } catch(GitflowException ex) {
