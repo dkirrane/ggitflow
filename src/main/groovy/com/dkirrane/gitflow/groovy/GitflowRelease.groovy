@@ -35,7 +35,7 @@ class GitflowRelease {
     def keep
     def msgPrefix
     def msgSuffix
-    def push = true
+    def push
 
     void start(String releaseBranchName) throws GitflowException {
         init.requireGitRepo()

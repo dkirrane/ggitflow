@@ -35,7 +35,7 @@ class GitflowHotfix {
     def keep
     def msgPrefix
     def msgSuffix
-    def push = true
+    def push
 
     void start(String hotfixBranchName) throws GitflowException {
         init.requireGitRepo()

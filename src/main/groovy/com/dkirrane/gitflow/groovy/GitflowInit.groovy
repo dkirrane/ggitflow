@@ -35,7 +35,6 @@ class GitflowInit extends GitflowCommon {
     def hotfixBrnPref
     def supportBrnPref
     def versionTagPref
-    def push = true
 
     void cmdDefault() throws GitflowException {
         super.requireGitRepo()
@@ -138,7 +137,7 @@ class GitflowInit extends GitflowCommon {
                 log.info "Master branch: " + rps
             }
 
-            if(push && origin) {
+            if(origin) {
                 log.debug "Pushing master branch to ${origin}."
                 // http://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-github
                 // http://stackoverflow.com/questions/6031214/git-how-to-use-netrc-file-on-windows-to-save-user-and-password
@@ -168,7 +167,7 @@ class GitflowInit extends GitflowCommon {
             def rps = super.gitAllBranches()
             log.info "Branch: " + rps
 
-            if(push && origin) {
+            if(origin) {
                 log.debug "Pushing develop branch to ${origin}."
                 Integer exitCode = super.executeRemote("git push ${origin} ${developBrnName}")
                 if(exitCode){

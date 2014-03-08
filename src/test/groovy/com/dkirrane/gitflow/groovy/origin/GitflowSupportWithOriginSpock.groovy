@@ -64,7 +64,7 @@ class GitflowSupportWithOriginSpock extends Specification {
 
     def "Gitflow support start"() {
         given: "GitflowSupport"
-        def support = new GitflowSupport(init:init,startCommit:"master")
+        def support = new GitflowSupport(init:init,startCommit:"master",push:true)
 
         when: "start is called"
         support.start(SUPPORT_BRN_NAME)

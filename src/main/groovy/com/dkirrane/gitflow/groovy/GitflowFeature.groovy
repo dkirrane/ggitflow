@@ -36,7 +36,7 @@ class GitflowFeature {
     def keep
     def msgPrefix
     def msgSuffix
-    def push = true
+    def push
 
     void start(String featureBranchName) throws GitflowException {
         init.requireGitRepo()

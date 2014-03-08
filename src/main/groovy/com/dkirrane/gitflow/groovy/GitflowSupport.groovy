@@ -29,7 +29,8 @@ class GitflowSupport {
 
     def startCommit
     def msgPrefix
-    def msgSuffix    
+    def msgSuffix
+    def push
 
     void start(String supportBranchName) throws GitflowException {
         init.requireGitRepo()
