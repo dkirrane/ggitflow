@@ -237,9 +237,9 @@ class GitflowRelease {
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing feature branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
                     } else {
-                        errorMsg = "Issue pushing feature branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                     }
                     throw new GitflowException(errorMsg)
                 }
