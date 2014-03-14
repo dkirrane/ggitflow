@@ -121,8 +121,13 @@ class GitflowRelease {
         log.info ""
 
     }
-
+    
     void finish(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
+        finishToMaster(releaseBranchName)
+        finishToDevelop(releaseBranchName)
+    }    
+    
+    void finishToMaster(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!releaseBranchName) {
@@ -149,7 +154,6 @@ class GitflowRelease {
         init.requireTagAbsent(tagName)
 
         def origin = init.getOrigin()
-        def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
             // if the origin exists, fetch and assert that
@@ -157,9 +161,6 @@ class GitflowRelease {
         }
         if(init.gitBranchExists("${origin}/${releaseBranch}")){
             init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
-        }
-        if(init.gitBranchExists("${origin}/${develop}")){
-            init.requireBranchesEqual(develop, "${origin}/${develop}")
         }
         if(init.gitBranchExists("${origin}/${master}")){
             init.requireBranchesEqual(master, "${origin}/${master}")
@@ -191,12 +192,67 @@ class GitflowRelease {
                 if(!signingkey){
                     throw new GitflowException("Missing argument <signingkey>")
                 }
-//                init.executeLocal("git tag -u ${signingkey} -m \"${tagMsg}\" ${tagName} ${master}")
+                //                init.executeLocal("git tag -u ${signingkey} -m \"${tagMsg}\" ${tagName} ${master}")
                 init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
             } else{
-//                init.executeLocal("git tag -a -m \"${tagMsg}\" ${tagName} ${master}")
+                //                init.executeLocal("git tag -a -m \"${tagMsg}\" ${tagName} ${master}")
                 init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
             }
+        }
+
+        // push it
+        if(push && origin) {
+            def pushing = [master,tagName]
+            for (branch in pushing) {
+                log.info "Pushing ${branch}"
+                Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
+                if(exitCode){
+                    def errorMsg
+                    if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    } else {
+                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    }
+                    throw new GitflowException(errorMsg)
+                }
+            }
+        }
+
+    }    
+
+    void finishToDevelop(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
+        init.requireGitRepo()
+
+        if(!releaseBranchName) {
+            throw new GitflowException("Missing argument <releaseBranchName>")
+        }
+        if(!init.gitflowIsInitialized()){
+            throw new GitflowException("Gitflow is not initialized.")
+        }
+        msgPrefix = msgPrefix ? msgPrefix + " " : ""
+        msgSuffix = msgSuffix ? " " + msgSuffix : ""
+
+        def prefix = init.getReleaseBranchPrefix()
+        def versionPrefix = init.getVersionTagPrefix()
+
+        if(releaseBranchName.contains(prefix)){
+            releaseBranchName = releaseBranchName.minus(prefix)
+        }
+        def releaseBranch = prefix + releaseBranchName
+        def tagName = versionPrefix + releaseBranchName
+
+        // sanity checks
+        init.requireLocalBranch(releaseBranch)
+        init.requireCleanWorkingTree()
+
+        def origin = init.getOrigin()
+        def develop = init.getDevelopBranch()
+        def master = init.getMasterBranch()
+        if(init.gitBranchExists("${origin}/${releaseBranch}")){
+            init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+        }
+        if(init.gitBranchExists("${origin}/${develop}")){
+            init.requireBranchesEqual(develop, "${origin}/${develop}")
         }
 
         // try to merge into develop
@@ -230,7 +286,7 @@ class GitflowRelease {
 
         // push it
         if(push && origin) {
-            def pushing = [develop,master,tagName]
+            def pushing = [develop]
             for (branch in pushing) {
                 log.info "Pushing ${branch}"
                 Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
