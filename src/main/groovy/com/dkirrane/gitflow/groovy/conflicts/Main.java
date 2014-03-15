@@ -17,6 +17,7 @@
 package com.dkirrane.gitflow.groovy.conflicts;
 
 import com.dkirrane.gitflow.groovy.GitflowInit;
+import com.dkirrane.gitflow.groovy.GitflowRelease;
 import com.dkirrane.gitflow.groovy.Constants;
 import com.dkirrane.gitflow.groovy.ex.GitflowException;
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException;
@@ -31,18 +32,35 @@ public class Main {
         GitflowInit gitflowInit = new GitflowInit();
         gitflowInit.setRepoDir(new File("/Users/desmondkirrane/NetBeansProjects/GitHub/GroovyGitflow/ggitflow-test1"));
         gitflowInit.setMasterBrnName(Constants.DEFAULT_MASTER_BRN_NAME);
-        gitflowInit.setDevelopBrnName("development");
+        gitflowInit.setDevelopBrnName(Constants.DEFAULT_DEVELOP_BRN_NAME);
         gitflowInit.setFeatureBrnPref(Constants.DEFAULT_FEATURE_BRN_PREFIX);
         gitflowInit.setReleaseBrnPref(Constants.DEFAULT_RELEASE_BRN_PREFIX);
         gitflowInit.setHotfixBrnPref(Constants.DEFAULT_HOTFIX_BRN_PREFIX);
         gitflowInit.setSupportBrnPref(Constants.DEFAULT_SUPPORT_BRN_PREFIX);
         gitflowInit.setVersionTagPref(Constants.DEFAULT_VERSION_TAG_PREFIX);
         
-        FixPomMergeConflicts fixPomMergeConflicts = new FixPomMergeConflicts();
-        fixPomMergeConflicts.setInit(gitflowInit);
-        fixPomMergeConflicts.setMsgPrefix("");
-        fixPomMergeConflicts.setMsgSuffix("");
-        
-        fixPomMergeConflicts.resolveConflicts2();
+        GitflowRelease release = new GitflowRelease();
+        release.setInit(gitflowInit);
+        release.start("1.0");     
+
+//        for (int i = 0; i < 10; i++) {
+//            Map<String, String> gitflowPrefixes = gitflowInit.getGitflowPrefixes();
+//            System.out.println("gitflowPrefixes = " + gitflowPrefixes);
+//
+//            System.out.println("master = " + gitflowInit.getMasterBranch());
+//            System.out.println("develop = " + gitflowInit.getDevelopBranch());
+//            System.out.println("feature prefix = " + gitflowInit.getFeatureBranchPrefix());
+//            System.out.println("release prefix = " + gitflowInit.getReleaseBranchPrefix());
+//            System.out.println("hotfix prefix = " + gitflowInit.getHotfixBranchPrefix());
+//            System.out.println("support prefix = " + gitflowInit.getSupportBranchPrefix());
+//            System.out.println("version tag prefix = " + gitflowInit.getVersionTagPrefix());
+//        }
+
+//        FixPomMergeConflicts fixPomMergeConflicts = new FixPomMergeConflicts();
+//        fixPomMergeConflicts.setInit(gitflowInit);
+//        fixPomMergeConflicts.setMsgPrefix("");
+//        fixPomMergeConflicts.setMsgSuffix("");
+//
+//        fixPomMergeConflicts.resolveConflicts2();
     }
 }

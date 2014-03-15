@@ -48,7 +48,7 @@ class GitflowRelease {
             init.cmdDefault()
         }
 
-        def prefix = init.getReleaseBranchPrefix()
+        String prefix = init.getReleaseBranchPrefix()
         def versionPrefix = init.getVersionTagPrefix()
 
         if(releaseBranchName.contains(prefix)){

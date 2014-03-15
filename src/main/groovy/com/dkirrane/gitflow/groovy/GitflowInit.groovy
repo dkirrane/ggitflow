@@ -223,9 +223,14 @@ class GitflowInit extends GitflowCommon {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ""])
-            }
-            super.executeLocal("git config --get-regexp gitflow.*")
+            }            
         }
+
+        super.executeLocal("git config --get-regexp gitflow.*")
+        def process = "git config -l".execute(envp, repoDir)
+        process.in.eachLine { line ->
+            println line
+        }        
     }
 }
 
