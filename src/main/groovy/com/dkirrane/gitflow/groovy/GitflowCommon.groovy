@@ -106,8 +106,10 @@ class GitflowCommon {
         return executeLocal("git config --get remote.origin.url", true)
     }
 
-    Map<String, String> getGitflowPrefixes() {
-        if(prefixes?.isEmpty()) {
+    String getGitflowPrefixes(configName) {
+        log.debug "getGitflowPrefixes"
+        String configValue;
+        if(prefixes?.isEmpty() || !prefixes.containsKey(configName)) {
             def key
             def value
             def process = "git config --get-regexp gitflow".execute(envp, repoDir)
@@ -124,48 +126,49 @@ class GitflowCommon {
             }
             println "$prefixes"
         }
+        log.debug "Gitflow config ${prefixes}"
 
-        return prefixes;
+        return prefixes[configName];
     }
 
     String getMasterBranch() {
-        def master = getGitflowPrefixes()['gitflow.branch.master']
+        def master = getGitflowPrefixes('gitflow.branch.master')
         log.debug "gitflow.branch.master = ${master}"
         return master
     }
 
     String getDevelopBranch() {
-        def develop = getGitflowPrefixes()['gitflow.branch.develop']
+        def develop = getGitflowPrefixes('gitflow.branch.develop')
         log.debug "gitflow.branch.develop = ${develop}"
         return develop
     }
 
     String getFeatureBranchPrefix() {
-        def prefix = getGitflowPrefixes()['gitflow.prefix.feature']
+        def prefix = getGitflowPrefixes('gitflow.prefix.feature')
         log.debug "gitflow.prefix.feature = ${prefix}"
         return prefix
     }
 
     String getReleaseBranchPrefix() {
-        def prefix = getGitflowPrefixes()['gitflow.prefix.release']
+        def prefix = getGitflowPrefixes('gitflow.prefix.release')
         log.debug "gitflow.prefix.release = ${prefix}"
         return prefix
     }
 
     String getHotfixBranchPrefix() {
-        def prefix = getGitflowPrefixes()['gitflow.prefix.hotfix']
+        def prefix = getGitflowPrefixes('gitflow.prefix.hotfix')
         log.debug "gitflow.prefix.hotfix = ${prefix}"
         return prefix
     }
 
     String getSupportBranchPrefix() {
-        def prefix = getGitflowPrefixes()['gitflow.prefix.support']
+        def prefix = getGitflowPrefixes('gitflow.prefix.support')
         log.debug "gitflow.prefix.support = ${prefix}"
         return prefix
     }
 
     String getVersionTagPrefix() {
-        def prefix = getGitflowPrefixes()['gitflow.prefix.versiontag']
+        def prefix = getGitflowPrefixes('gitflow.prefix.versiontag')
         log.debug "gitflow.prefix.versiontag = ${prefix}"
         return prefix
     }

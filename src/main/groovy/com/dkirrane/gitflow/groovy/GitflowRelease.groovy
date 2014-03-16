@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014 Desmond Kirrane
  *
  * This program is free software: you can redistribute it and/or modify
@@ -121,12 +121,12 @@ class GitflowRelease {
         log.info ""
 
     }
-    
+
     void finish(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
         finishToMaster(releaseBranchName)
         finishToDevelop(releaseBranchName)
-    }    
-    
+    }
+
     void finishToMaster(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
@@ -179,9 +179,9 @@ class GitflowRelease {
             } else {
                 def squashMsg = "${msgPrefix}Squashing branch '${releaseBranch}' into ${master}${msgSuffix}"
                 init.executeLocal("git merge --squash ${releaseBranch}")
-                init.executeLocal(["git", "commit", "-m '${squashMsg}'"])
+                init.executeLocal(["git", "commit", "-m", "\"${squashMsg}\""])
 
-                init.executeLocal(["git", "merge", "-m '${msg}'", "${releaseBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${releaseBranch}"])
             }
         }
 
@@ -192,18 +192,20 @@ class GitflowRelease {
                 if(!signingkey){
                     throw new GitflowException("Missing argument <signingkey>")
                 }
-                //                init.executeLocal("git tag -u ${signingkey} -m \"${tagMsg}\" ${tagName} ${master}")
                 init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
             } else{
-                //                init.executeLocal("git tag -a -m \"${tagMsg}\" ${tagName} ${master}")
                 init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
             }
         }
 
         // push it
-        if(push && origin) {
+        if(origin) {
             def pushing = [master,tagName]
             for (branch in pushing) {
+                if(!init.gitBranchExists("${origin}/${branch}")){
+                    log.debug "Remote branch ${branch} does not exists. Skipping push"
+                    continue;
+                }
                 log.info "Pushing ${branch}"
                 Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
                 if(exitCode){
@@ -218,7 +220,7 @@ class GitflowRelease {
             }
         }
 
-    }    
+    }
 
     void finishToDevelop(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
@@ -266,13 +268,13 @@ class GitflowRelease {
             // ideally git merge --no-ff $tagname here, instead!
             def msg = "${msgPrefix}Merge branch '${releaseBranch}' into ${develop}${msgSuffix}"
             if(!squash){
-                init.executeLocal(["git","merge","-m '${msg}'","--no-ff","${releaseBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--no-ff", "${releaseBranch}"])
             } else {
                 def squashMsg = "${msgPrefix}Squashing branch '${releaseBranch}' into ${develop}${msgSuffix}"
                 init.executeLocal("git merge --squash ${releaseBranch}")
-                init.executeLocal(["git", "commit", "-m '${squashMsg}'"])
+                init.executeLocal(["git", "commit", "-m", "\"${squashMsg}\""])
 
-                init.executeLocal(["git", "merge", "-m '${msg}'", "${releaseBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${releaseBranch}"])
             }
         }
 
@@ -285,9 +287,13 @@ class GitflowRelease {
         }
 
         // push it
-        if(push && origin) {
+        if(origin) {
             def pushing = [develop]
             for (branch in pushing) {
+                if(!init.gitBranchExists("${origin}/${branch}")){
+                    log.debug "Remote branch ${branch} does not exists. Skipping push"
+                    continue;
+                }
                 log.info "Pushing ${branch}"
                 Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
                 if(exitCode){
@@ -302,13 +308,13 @@ class GitflowRelease {
             }
         }
 
-        if(origin){
+        if(push && origin){
             //Delete remote release branch
             if (!keep) {
                 init.executeRemote("git push ${origin} :${releaseBranch}")
             }
         }
-        
+
         init.executeLocal("git checkout ${develop}")
 
         log.info ""

@@ -201,16 +201,16 @@ class GitflowFeature {
 
         def msg = "${msgPrefix}Merge branch '${featureBranch}' into ${develop}${msgSuffix}"
         if(commits.size() == 1) {
-            init.executeLocal(["git", "merge", "-m '${msg}'", "--ff", "${featureBranch}"])
+            init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--ff", "${featureBranch}"])
         } else {
             if(!squash){
-                init.executeLocal(["git","merge","-m '${msg}'","--no-ff","${featureBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--no-ff", "${featureBranch}"])
             } else {
                 def squashMsg = "${msgPrefix}Squashing branch '${featureBranch}' into ${develop}${msgSuffix}"
                 init.executeLocal("git merge --squash ${featureBranch}")
-                init.executeLocal(["git", "commit", "-m '${squashMsg}'"])
+                init.executeLocal(["git", "commit", "-m", "\"${squashMsg}\""])
 
-                init.executeLocal(["git", "merge", "-m '${msg}'", "${featureBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${featureBranch}"])
             }
         }
 
@@ -259,7 +259,7 @@ class GitflowFeature {
 
         // delete branch
         def origin = init.getOrigin()
-        if(origin && !keep){
+        if(push && origin && !keep){
             init.executeRemote("git push ${origin} :refs/heads/${featureBranchName}")
         }
 

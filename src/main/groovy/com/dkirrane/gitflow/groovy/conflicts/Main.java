@@ -39,22 +39,19 @@ public class Main {
         gitflowInit.setSupportBrnPref(Constants.DEFAULT_SUPPORT_BRN_PREFIX);
         gitflowInit.setVersionTagPref(Constants.DEFAULT_VERSION_TAG_PREFIX);
         
-        GitflowRelease release = new GitflowRelease();
-        release.setInit(gitflowInit);
-        release.start("1.0");     
+//        GitflowRelease release = new GitflowRelease();
+//        release.setInit(gitflowInit);
+//        release.start("1.0");     
 
-//        for (int i = 0; i < 10; i++) {
-//            Map<String, String> gitflowPrefixes = gitflowInit.getGitflowPrefixes();
-//            System.out.println("gitflowPrefixes = " + gitflowPrefixes);
-//
-//            System.out.println("master = " + gitflowInit.getMasterBranch());
-//            System.out.println("develop = " + gitflowInit.getDevelopBranch());
-//            System.out.println("feature prefix = " + gitflowInit.getFeatureBranchPrefix());
-//            System.out.println("release prefix = " + gitflowInit.getReleaseBranchPrefix());
-//            System.out.println("hotfix prefix = " + gitflowInit.getHotfixBranchPrefix());
-//            System.out.println("support prefix = " + gitflowInit.getSupportBranchPrefix());
-//            System.out.println("version tag prefix = " + gitflowInit.getVersionTagPrefix());
-//        }
+        for (int i = 0; i < 10; i++) {
+            System.out.println("master = " + gitflowInit.getMasterBranch());
+            System.out.println("develop = " + gitflowInit.getDevelopBranch());
+            System.out.println("feature prefix = " + gitflowInit.getFeatureBranchPrefix());
+            System.out.println("release prefix = " + gitflowInit.getReleaseBranchPrefix());
+            System.out.println("hotfix prefix = " + gitflowInit.getHotfixBranchPrefix());
+            System.out.println("support prefix = " + gitflowInit.getSupportBranchPrefix());
+            System.out.println("version tag prefix = " + gitflowInit.getVersionTagPrefix());
+        }
 
 //        FixPomMergeConflicts fixPomMergeConflicts = new FixPomMergeConflicts();
 //        fixPomMergeConflicts.setInit(gitflowInit);
