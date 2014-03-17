@@ -226,11 +226,8 @@ class GitflowInit extends GitflowCommon {
             }            
         }
 
-        super.executeLocal("git config --get-regexp gitflow.*")
-        def process = "git config -l".execute(envp, repoDir)
-        process.in.eachLine { line ->
-            println line
-        }        
+        log.debug "Completed Gitflow initialisation"
+        super.executeLocal("git config --get-regexp gitflow.*")       
     }
 }
 

@@ -124,7 +124,6 @@ class GitflowCommon {
                     prefixes[key]=value ?: ""
                 }
             }
-            println "$prefixes"
         }
         log.debug "Gitflow config ${prefixes}"
 
