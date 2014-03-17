@@ -194,7 +194,7 @@ class FixPomMergeConflicts {
                 if(!outstandingConflicts) {
                     init.executeLocal("git add ${pom.path}")
                     def resolveMsg = "${msgPrefix}Auto-resolve pom version conflicts${msgSuffix}"
-                    init.executeLocal(["git", "commit", "-m '${resolveMsg}'"])
+                    init.executeLocal(["git", "commit", "-m", "\"${resolveMsg}\""])
                 }
             } else {
                 tmpFile.delete()

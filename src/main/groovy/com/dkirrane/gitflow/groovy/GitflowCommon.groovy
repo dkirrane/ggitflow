@@ -32,6 +32,8 @@ class GitflowCommon {
     def envp
     def repoDir
 
+    def prefixes = [:]
+
     String executeLocal(cmd){
         return executeLocal(cmd, false, null)
     }
@@ -51,7 +53,7 @@ class GitflowCommon {
         process.consumeProcessOutput(standard, error)
         process.waitFor()
 
-        log.info standard.toString()
+        log.debug standard.toString()
         log.debug "Exit code: " + process.exitValue()
         if(!ignoreExitCode){
             if (process.exitValue() != 0){
@@ -83,11 +85,11 @@ class GitflowCommon {
         process.consumeProcessOutput(standard, error)
         process.waitForOrKill(EXE_TIMEOUT)
 
-        log.info standard.toString()
+        log.debug standard.toString()
         log.debug "Exit code: " + process.exitValue()
 
         if(error.toString()) {
-            log.error error.toString()
+            log.warn error.toString()
         }
 
         return process.exitValue()
@@ -104,32 +106,70 @@ class GitflowCommon {
         return executeLocal("git config --get remote.origin.url", true)
     }
 
+    String getGitflowPrefixes(configName) {
+        log.debug "getGitflowPrefixes"
+        String configValue;
+        if(prefixes?.isEmpty() || !prefixes.containsKey(configName)) {
+            def key
+            def value
+            def process = "git config --get-regexp gitflow".execute(envp, repoDir)
+            process.in.eachLine { line ->
+                // If the line isn't blank
+                if(line.trim()) {
+                    // Split into a key and value
+                    def props = line.split(' ').collect { it.trim() }
+                    println "${props[0]}=${props[1]}"
+                    key=props[0]
+                    value=props[1]
+                    prefixes[key]=value ?: ""
+                }
+            }
+        }
+        log.debug "Gitflow config ${prefixes}"
+
+        return prefixes[configName];
+    }
+
     String getMasterBranch() {
-        return executeLocal("git config --get gitflow.branch.master", true)
+        def master = getGitflowPrefixes('gitflow.branch.master')
+        log.debug "gitflow.branch.master = ${master}"
+        return master
     }
 
     String getDevelopBranch() {
-        return executeLocal("git config --get gitflow.branch.develop", true)
+        def develop = getGitflowPrefixes('gitflow.branch.develop')
+        log.debug "gitflow.branch.develop = ${develop}"
+        return develop
     }
 
     String getFeatureBranchPrefix() {
-        return executeLocal("git config --get gitflow.prefix.feature", true)
+        def prefix = getGitflowPrefixes('gitflow.prefix.feature')
+        log.debug "gitflow.prefix.feature = ${prefix}"
+        return prefix
     }
 
     String getReleaseBranchPrefix() {
-        return executeLocal("git config --get gitflow.prefix.release", true)
+        def prefix = getGitflowPrefixes('gitflow.prefix.release')
+        log.debug "gitflow.prefix.release = ${prefix}"
+        return prefix
     }
 
     String getHotfixBranchPrefix() {
-        return executeLocal("git config --get gitflow.prefix.hotfix", true)
+        def prefix = getGitflowPrefixes('gitflow.prefix.hotfix')
+        log.debug "gitflow.prefix.hotfix = ${prefix}"
+        return prefix
     }
 
     String getSupportBranchPrefix() {
-        return executeLocal("git config --get gitflow.prefix.support", true)
+        def prefix = getGitflowPrefixes('gitflow.prefix.support')
+        log.debug "gitflow.prefix.support = ${prefix}"
+        return prefix
     }
 
     String getVersionTagPrefix() {
-        return executeLocal("git config --get gitflow.prefix.versiontag", true)
+        def prefix = getGitflowPrefixes('gitflow.prefix.versiontag')
+        log.debug "gitflow.prefix.versiontag = ${prefix}"
+        return prefix
     }
 
     List<File> gitMergeConflicts() {
@@ -347,6 +387,8 @@ class GitflowCommon {
         def support = getSupportBranchPrefix()
         def versiontag = getVersionTagPrefix()
 
+        log.info("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
+
         if(feature && release && hotfix && support){
             return true
         }
@@ -378,6 +420,7 @@ class GitflowCommon {
     }
 
     void requireGitRepo() {
+        log.debug("Verifying we are in a Git repo")
         try {
             executeLocal("git rev-parse --git-dir")
         } catch(GitflowException ex) {

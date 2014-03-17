@@ -63,7 +63,7 @@ class GitflowFeatureWithOriginSpock extends Specification {
     def "Gitflow feature start"() {
         given: "GitflowFeature"
 
-        def feature = new GitflowFeature(init:init)
+        def feature = new GitflowFeature(init:init,push:true)
 
         when: "start is called"
         feature.start(FEATURE_BRN_NAME)
@@ -77,7 +77,7 @@ class GitflowFeatureWithOriginSpock extends Specification {
 
     def "Gitflow feature finish"() {
         given: "GitflowFeature"
-        def feature = new GitflowFeature(init:init)
+        def feature = new GitflowFeature(init:init,push:true)
 
         new File(repoDir, "Commit1.txt").withWriter { out ->
             out.println "Commit1 on " + FEATURE_BRN_NAME

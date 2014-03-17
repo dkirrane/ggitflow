@@ -35,13 +35,12 @@ class GitflowInit extends GitflowCommon {
     def hotfixBrnPref
     def supportBrnPref
     def versionTagPref
-    def push = true
 
     void cmdDefault() throws GitflowException {
         super.requireGitRepo()
 
         if(super.gitflowIsInitialized()) {
-            log.warn "WARN Already initialized for gitflow."
+            log.info "Gitflow is already initialized"
             //            log.info "WARN To force reinitialization, use: git flow init -f"
             return
         }
@@ -54,7 +53,7 @@ class GitflowInit extends GitflowCommon {
         supportBrnPref = supportBrnPref?.trim() ?: DEFAULT_SUPPORT_BRN_PREFIX
         versionTagPref = versionTagPref?.trim() ?: DEFAULT_VERSION_TAG_PREFIX
 
-        log.info "Initializing Gitflow for repo '${repoDir}'."
+        log.info "Initialising Gitflow for repo '${repoDir}'."
         log.info "Gitflow Config:"
         log.info "\t Master branch '${masterBrnName}'"
         log.info "\t Develop branch '${developBrnName}'"
@@ -70,7 +69,7 @@ class GitflowInit extends GitflowCommon {
         // add a master branch if no such branch exists yet
         def masterBranch = super.getMasterBranch()
         if( masterBranch?.trim() ) {
-            log.debug "WARN master branch '${masterBranch}' already configured."
+            log.debug "master branch '${masterBranch}' already configured."
         } else {
             if(super.gitAllBranches().size() == 0){
                 log.debug "No branches exist yet. Master branch must be created now."
@@ -95,7 +94,7 @@ class GitflowInit extends GitflowCommon {
         // add a develop branch if no such branch exists yet
         def developBranch = super.getDevelopBranch()
         if( developBranch?.trim() ) {
-            log.debug "WARN develop branch '${developBranch}' already configured."
+            log.debug "develop branch '${developBranch}' already configured."
         } else {
             if(super.gitAllBranches().minus(["${masterBrnName}","${origin}/${masterBrnName}"]).size() == 0){
                 log.debug "No branches exist yet. Base branches must be created now."
@@ -138,7 +137,7 @@ class GitflowInit extends GitflowCommon {
                 log.info "Master branch: " + rps
             }
 
-            if(push && origin) {
+            if(origin) {
                 log.debug "Pushing master branch to ${origin}."
                 // http://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-github
                 // http://stackoverflow.com/questions/6031214/git-how-to-use-netrc-file-on-windows-to-save-user-and-password
@@ -168,7 +167,7 @@ class GitflowInit extends GitflowCommon {
             def rps = super.gitAllBranches()
             log.info "Branch: " + rps
 
-            if(push && origin) {
+            if(origin) {
                 log.debug "Pushing develop branch to ${origin}."
                 Integer exitCode = super.executeRemote("git push ${origin} ${developBrnName}")
                 if(exitCode){
@@ -224,9 +223,11 @@ class GitflowInit extends GitflowCommon {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ""])
-            }
-            super.executeLocal("git config --get-regexp gitflow.*")
+            }            
         }
+
+        log.debug "Completed Gitflow initialisation"
+        super.executeLocal("git config --get-regexp gitflow.*")       
     }
 }
 

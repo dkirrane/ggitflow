@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014 Desmond Kirrane
  *
  * This program is free software: you can redistribute it and/or modify
@@ -19,6 +19,7 @@ package com.dkirrane.gitflow.groovy
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 import groovy.util.logging.Slf4j
+import java.io.File
 
 /**
  *
@@ -35,7 +36,7 @@ class GitflowFeature {
     def keep
     def msgPrefix
     def msgSuffix
-    def push = true
+    def push
 
     void start(String featureBranchName) throws GitflowException {
         init.requireGitRepo()
@@ -58,9 +59,8 @@ class GitflowFeature {
         def master = init.getMasterBranch()
         if(startCommit) {
             def scOnDevelop = init.gitIsBranchMergedInto(startCommit,develop)
-            def scOnMaster = init.gitIsBranchMergedInto(startCommit,master)
-            if(!scOnDevelop || !scOnMaster){
-                throw new GitflowException("Given start commit '${startCommit}' is not a valid commit on '${develop}' or .")
+            if(!scOnDevelop){
+                throw new GitflowException("Given start commit '${startCommit}' is not a valid commit on '${develop}'.")
             }
         } else {
             startCommit = develop
@@ -108,7 +108,7 @@ class GitflowFeature {
         log.info ""
         log.info "Now, start committing on your feature. When done, use:"
         log.info ""
-        log.info "     git flow feature finish ${featureBranch}"
+        log.info "     mvn ggitflow:feature-finish"
         log.info ""
     }
 
@@ -132,12 +132,11 @@ class GitflowFeature {
 
         // sanity checks
         if(!init.gitBranchExists(featureBranch)){
-            log.error "ERROR: feature branch ${featureBranch} does not exist"
-            return;
+            throw new GitflowException("Feature branch " + featureBranch + " does not exist")
         }
 
         // detect if we're restoring from a merge conflict
-        File mergeBaseFile = new File(init.repoDir, ".git/.gitflow/MERGE_BASE")
+        File mergeBaseFile = new File(init.repoDir, ".git" + File.separator + ".gitflow" + File.separator + "MERGE_BASE")
         String mergeBasePath = mergeBaseFile.getCanonicalPath()
         if(mergeBaseFile.exists()) {
             if(init.gitIsCleanWorkingTree()){
@@ -156,21 +155,20 @@ class GitflowFeature {
                     // MERGE_BASE file and continuing normal execution of the finish
                     mergeBaseFile.delete()
                 }
+            } else {
+                log.warn ""
+                log.warn "Merge conflicts not resolved yet, use:"
+                log.warn "    git mergetool"
+                log.warn "    git commit"
+                log.warn ""
+                log.warn "You can then complete the finish by running feature finish again"
+                log.warn ""
+                //            System.exit(1)
             }
-        } else {
-            log.warn ""
-            log.warn "Merge conflicts not resolved yet, use:"
-            log.warn "    git mergetool"
-            log.warn "    git commit"
-            log.warn ""
-            log.warn "You can then complete the finish by running feature finish again"
-            log.warn ""
-            //            System.exit(1)
         }
 
         if(!init.gitIsCleanWorkingTree()){
-            log.error "Need a clean working tree"
-            return
+            throw new GitflowException("Failed to finish. Need a clean working tree")
         }
 
         // update local repo with remote changes
@@ -203,16 +201,16 @@ class GitflowFeature {
 
         def msg = "${msgPrefix}Merge branch '${featureBranch}' into ${develop}${msgSuffix}"
         if(commits.size() == 1) {
-            init.executeLocal(["git", "merge", "-m '${msg}'", "--ff", "${featureBranch}"])
+            init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--ff", "${featureBranch}"])
         } else {
             if(!squash){
-                init.executeLocal(["git","merge","-m '${msg}'","--no-ff","${featureBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--no-ff", "${featureBranch}"])
             } else {
                 def squashMsg = "${msgPrefix}Squashing branch '${featureBranch}' into ${develop}${msgSuffix}"
                 init.executeLocal("git merge --squash ${featureBranch}")
-                init.executeLocal(["git", "commit", "-m '${squashMsg}'"])
+                init.executeLocal(["git", "commit", "-m", "\"${squashMsg}\""])
 
-                init.executeLocal(["git", "merge", "-m '${msg}'", "${featureBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${featureBranch}"])
             }
         }
 
@@ -229,19 +227,28 @@ class GitflowFeature {
 
         init.executeLocal("git checkout -q ${featureBranchName}")
 
-        def opts = ""
+        def opts
         if(isInteractive){
             opts = "-i"
         }
 
         def develop = init.getDevelopBranch()
-        Integer rebaseExitCode = init.executeRemote("git rebase ${opts} ${develop}")
-        if(!rebaseExitCode){
+        
+        Integer rebaseExitCode
+        if(opts) {
+            rebaseExitCode = init.executeRemote("git rebase ${opts} ${develop}")            
+        } else {
+            rebaseExitCode = init.executeRemote("git rebase ${develop}")
+        }
+        
+        if(rebaseExitCode != 0){
             log.warn "WARN: Finish was aborted due to conflicts during rebase."
             log.warn "WARN: Please finish the rebase manually now."
             log.warn "WARN: When finished, re-run:"
-            log.warn "WARN: git flow feature finish '${featureBranchName}' '${develop}'"
+            log.warn "WARN: mvn ggitflow:feature-finish"
             throw new GitflowException("Rebase feature onto develop has conflicts")
+        } else {
+            log.debug "Rebase complete"
         }
     }
 
@@ -252,7 +259,7 @@ class GitflowFeature {
 
         // delete branch
         def origin = init.getOrigin()
-        if(origin){
+        if(push && origin && !keep){
             init.executeRemote("git push ${origin} :refs/heads/${featureBranchName}")
         }
 

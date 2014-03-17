@@ -63,7 +63,7 @@ class GitflowReleaseWithOriginSpock extends Specification {
 
     def "Gitflow release start"() {
         given: "GitflowRelease"
-        def release = new GitflowRelease(init:init)
+        def release = new GitflowRelease(init:init,push:true)
 
         when: "start is called"
         release.start(RELEASE_BRN_NAME)
@@ -76,7 +76,7 @@ class GitflowReleaseWithOriginSpock extends Specification {
 
     def "Gitflow release finish"() {
         given: "GitflowRelease"
-        def release = new GitflowRelease(init:init)
+        def release = new GitflowRelease(init:init,push:true)
 
         new File(repoDir, "someCommit.txt").withWriter { out ->
             out.println "Commit " + RELEASE_BRN_NAME

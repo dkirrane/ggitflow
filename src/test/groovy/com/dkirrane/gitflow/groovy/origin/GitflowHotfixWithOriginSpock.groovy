@@ -64,7 +64,7 @@ class GitflowHotfixWithOriginSpock extends Specification {
 
     def "Gitflow hotfix start"() {
         given: "GitflowHotfix"
-        def hotfix = new GitflowHotfix(init:init)
+        def hotfix = new GitflowHotfix(init:init,push:true)
 
         when: "start is called"
         hotfix.start(HOTFIX_BRN_NAME)
@@ -77,7 +77,7 @@ class GitflowHotfixWithOriginSpock extends Specification {
 
     def "Gitflow hotfix finish"() {
         given: "GitflowHotfix"
-        def hotfix = new GitflowHotfix(init:init)
+        def hotfix = new GitflowHotfix(init:init,push:true)
 
         new File(repoDir, "someCommit.txt").withWriter { out ->
             out.println "Commit " + HOTFIX_BRN_NAME

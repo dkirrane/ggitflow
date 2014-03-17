@@ -35,7 +35,7 @@ class GitflowHotfix {
     def keep
     def msgPrefix
     def msgSuffix
-    def push = true
+    def push
 
     void start(String hotfixBranchName) throws GitflowException {
         init.requireGitRepo()
@@ -113,11 +113,10 @@ class GitflowHotfix {
         log.info "- You are now on branch '${hotfixBranch}'"
         log.info ""
         log.info "Follow-up actions:"
-        log.info "- Bump the version number now!"
         log.info "- Start committing your hot fixes"
         log.info "- When done, run:"
         log.info ""
-        log.info "     git flow hotfix finish '${hotfixBranchName}'"
+        log.info "     mvn ggitflow:hotfix-finish"
         log.info ""
 
     }
@@ -174,25 +173,27 @@ class GitflowHotfix {
 
             def msg = "${msgPrefix}Merge branch '${hotfixBranch}' into ${master}${msgSuffix}"
             if(!squash){
-                init.executeLocal(["git","merge","-m '${msg}'","--no-ff","${hotfixBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--no-ff", "${hotfixBranch}"])
             } else {
                 def squashMsg = "${msgPrefix}Squashing branch '${hotfixBranch}' into ${master}${msgSuffix}"
                 init.executeLocal("git merge --squash ${hotfixBranch}")
-                init.executeLocal(["git", "commit", "-m '${squashMsg}'"])
+                init.executeLocal(["git", "commit", "-m", "\"${squashMsg}\""])
 
-                init.executeLocal(["git", "merge", "-m '${msg}'", "${hotfixBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${hotfixBranch}"])
             }
         }
 
+
         if(!init.gitTagExists(tagName)){
-            def tagMsg = "Hotfix_version_${tagName}"
+            log.info "Tagging hotfix branch ${hotfixBranch} on ${master}"
+            def tagMsg = "Hotfix version ${tagName}"
             if(sign){
                 if(!signingkey){
                     throw new GitflowException("Missing argument <signingkey>")
                 }
-                init.executeLocal("git tag -u ${signingkey} -m \"${tagMsg}\" ${tagName} ${master}")
+                init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
             } else{
-                init.executeLocal("git tag -a -m \"${tagMsg}\" ${tagName} ${master}")
+                init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
             }
         }
 
@@ -206,13 +207,13 @@ class GitflowHotfix {
             // ideally git merge --no-ff $tagname here, instead!
             def msg = "${msgPrefix}Merge branch '${hotfixBranch}' into ${develop}${msgSuffix}"
             if(!squash){
-                init.executeLocal(["git","merge","-m '${msg}'","--no-ff","${hotfixBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "--no-ff", "${hotfixBranch}"])
             } else {
                 def squashMsg = "${msgPrefix}Squashing branch '${hotfixBranch}' into ${develop}${msgSuffix}"
                 init.executeLocal("git merge --squash ${hotfixBranch}")
-                init.executeLocal(["git", "commit", "-m '${squashMsg}'"])
+                init.executeLocal(["git", "commit", "-m", "\"${squashMsg}\""])
 
-                init.executeLocal(["git", "merge", "-m '${msg}'", "${hotfixBranch}"])
+                init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${hotfixBranch}"])
             }
         }
 
@@ -225,24 +226,28 @@ class GitflowHotfix {
         }
 
         // push it
-        if(push && origin) {
+        if(origin) {
             def pushing = [develop,master,tagName]
             for (branch in pushing) {
+                if(!init.gitBranchExists("${origin}/${branch}")){
+                    log.debug "Remote branch ${branch} does not exists. Skipping push"
+                    continue;
+                }                
                 log.debug "Pushing ${branch}"
                 Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing feature branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
                     } else {
-                        errorMsg = "Issue pushing feature branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                     }
                     throw new GitflowException(errorMsg)
                 }
             }
         }
 
-        if(origin){
+        if(push && origin){
             //Delete remote hotfix branch
             if (!keep) {
                 init.executeRemote("git push ${origin} :${hotfixBranch}")
