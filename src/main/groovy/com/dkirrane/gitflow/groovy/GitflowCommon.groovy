@@ -28,7 +28,7 @@ import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 @Slf4j
 class GitflowCommon {
 
-    static final Long EXE_TIMEOUT = 30000L
+    static final Long EXE_TIMEOUT = 120000L
     def envp
     def repoDir
 
@@ -118,7 +118,7 @@ class GitflowCommon {
                 if(line.trim()) {
                     // Split into a key and value
                     def props = line.split(' ').collect { it.trim() }
-                    println "${props[0]}=${props[1]}"
+                    log.debug "${props[0]}=${props[1]}"
                     key=props[0]
                     value=props[1]
                     prefixes[key]=value ?: ""
@@ -387,7 +387,7 @@ class GitflowCommon {
         def support = getSupportBranchPrefix()
         def versiontag = getVersionTagPrefix()
 
-        log.info("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
+        log.debug("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
 
         if(feature && release && hotfix && support){
             return true
