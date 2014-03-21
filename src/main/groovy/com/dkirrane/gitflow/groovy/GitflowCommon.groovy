@@ -118,7 +118,7 @@ class GitflowCommon {
                 if(line.trim()) {
                     // Split into a key and value
                     def props = line.split(' ').collect { it.trim() }
-                    println "${props[0]}=${props[1]}"
+                    log.debug "${props[0]}=${props[1]}"
                     key=props[0]
                     value=props[1]
                     prefixes[key]=value ?: ""
