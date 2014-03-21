@@ -387,7 +387,7 @@ class GitflowCommon {
         def support = getSupportBranchPrefix()
         def versiontag = getVersionTagPrefix()
 
-        log.info("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
+        log.debug("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
 
         if(feature && release && hotfix && support){
             return true
