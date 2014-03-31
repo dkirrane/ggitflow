@@ -145,7 +145,7 @@ class GitflowInit extends GitflowCommon {
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                     } else {
                         errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your ~/.netrc file"
                     }

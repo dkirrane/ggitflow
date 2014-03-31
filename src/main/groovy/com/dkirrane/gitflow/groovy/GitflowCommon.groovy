@@ -28,7 +28,7 @@ import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 @Slf4j
 class GitflowCommon {
 
-    static final Long EXE_TIMEOUT = 120000L
+    static final Long EXE_TIMEOUT = 60000L
     def envp
     def repoDir
 

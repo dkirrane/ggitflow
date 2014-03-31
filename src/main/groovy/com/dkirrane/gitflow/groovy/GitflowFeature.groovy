@@ -76,7 +76,16 @@ class GitflowFeature {
         if(origin){
             // if the origin branch counterpart exists, fetch and assert that
             // the local branch isn't behind it (to avoid unnecessary rebasing)
-            init.executeRemote("git fetch --all")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
 
             if(init.gitBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
@@ -93,7 +102,7 @@ class GitflowFeature {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                 } else {
                     errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                 }
@@ -177,7 +186,16 @@ class GitflowFeature {
         if(origin){
             // if the origin branch counterpart exists, fetch and assert that
             // the local branch isn't behind it (to avoid unnecessary rebasing)
-            init.executeRemote("git fetch --all")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
 
             if(init.gitBranchExists("${origin}/${featureBranch}")){
                 init.requireBranchesEqual(featureBranch, "${origin}/${featureBranch}")
@@ -233,14 +251,14 @@ class GitflowFeature {
         }
 
         def develop = init.getDevelopBranch()
-        
+
         Integer rebaseExitCode
         if(opts) {
-            rebaseExitCode = init.executeRemote("git rebase ${opts} ${develop}")            
+            rebaseExitCode = init.executeRemote("git rebase ${opts} ${develop}")
         } else {
             rebaseExitCode = init.executeRemote("git rebase ${develop}")
         }
-        
+
         if(rebaseExitCode != 0){
             log.warn "WARN: Finish was aborted due to conflicts during rebase."
             log.warn "WARN: Please finish the rebase manually now."

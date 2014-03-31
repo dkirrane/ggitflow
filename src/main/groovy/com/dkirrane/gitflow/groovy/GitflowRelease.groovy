@@ -84,7 +84,16 @@ class GitflowRelease {
         if(origin){
             // if the origin branch counterpart exists, fetch and assert that
             // the local branch isn't behind it (to avoid unnecessary rebasing)
-            init.executeRemote("git fetch --all")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
 
             if(init.gitBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
@@ -100,7 +109,7 @@ class GitflowRelease {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${releaseBranch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue pushing feature branch '${releaseBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                 } else {
                     errorMsg = "Issue pushing feature branch '${releaseBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                 }
@@ -157,7 +166,16 @@ class GitflowRelease {
         def master = init.getMasterBranch()
         if(origin){
             // if the origin exists, fetch and assert that
-            init.executeRemote("git fetch --all")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
         }
         if(init.gitBranchExists("${origin}/${releaseBranch}")){
             init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
@@ -211,7 +229,7 @@ class GitflowRelease {
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                     } else {
                         errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                     }
@@ -299,7 +317,7 @@ class GitflowRelease {
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                     } else {
                         errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                     }
