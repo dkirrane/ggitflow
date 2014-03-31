@@ -16,12 +16,12 @@
  */
 package com.dkirrane.gitflow.groovy.conflicts;
 
-import com.dkirrane.gitflow.groovy.GitflowInit;
-import com.dkirrane.gitflow.groovy.GitflowRelease;
+import java.io.File;
+
 import com.dkirrane.gitflow.groovy.Constants;
+import com.dkirrane.gitflow.groovy.GitflowInit;
 import com.dkirrane.gitflow.groovy.ex.GitflowException;
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException;
-import java.io.File;
 
 /**
  *
@@ -30,7 +30,8 @@ public class Main {
 
     public static void main(String[] args) throws GitflowException, GitflowMergeConflictException {
         GitflowInit gitflowInit = new GitflowInit();
-        gitflowInit.setRepoDir(new File("/Users/desmondkirrane/NetBeansProjects/GitHub/GroovyGitflow/ggitflow-test1"));
+//        gitflowInit.setRepoDir(new File("/Users/desmondkirrane/NetBeansProjects/GitHub/GroovyGitflow/ggitflow-test1"));
+        gitflowInit.setRepoDir(new File("C:\\Dev\\Git\\IngenSG\\ingensg-integration-tests"));
         gitflowInit.setMasterBrnName(Constants.DEFAULT_MASTER_BRN_NAME);
         gitflowInit.setDevelopBrnName(Constants.DEFAULT_DEVELOP_BRN_NAME);
         gitflowInit.setFeatureBrnPref(Constants.DEFAULT_FEATURE_BRN_PREFIX);
@@ -38,6 +39,8 @@ public class Main {
         gitflowInit.setHotfixBrnPref(Constants.DEFAULT_HOTFIX_BRN_PREFIX);
         gitflowInit.setSupportBrnPref(Constants.DEFAULT_SUPPORT_BRN_PREFIX);
         gitflowInit.setVersionTagPref(Constants.DEFAULT_VERSION_TAG_PREFIX);
+
+        gitflowInit.cmdDefault();
         
 //        GitflowRelease release = new GitflowRelease();
 //        release.setInit(gitflowInit);

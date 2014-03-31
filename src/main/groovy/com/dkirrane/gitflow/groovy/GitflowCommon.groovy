@@ -389,7 +389,7 @@ class GitflowCommon {
 
         log.debug("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
 
-        if(feature && release && hotfix && support){
+        if(feature && release && hotfix && support && versiontag){
             return true
         }
         return false

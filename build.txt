@@ -10,6 +10,11 @@ gradlew build
 gradlew build -x test
 
 ##
+# Run Java Main class
+##
+./gradlew run -PmainClassName=com.dkirrane.gitflow.groovy.conflicts.Main --stacktrace
+
+##
 # Setting a system property of taskName.debug will run the tests in debug mode, suspended and listening on port 5005.
 # For example:
 ##

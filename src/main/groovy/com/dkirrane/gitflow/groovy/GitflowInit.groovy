@@ -222,7 +222,7 @@ class GitflowInit extends GitflowCommon {
             if(versionTagPref?.trim()) {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
-                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ""])
+                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "\"\""])
             }            
         }
 
