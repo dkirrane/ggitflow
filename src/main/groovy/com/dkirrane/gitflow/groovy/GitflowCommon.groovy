@@ -30,7 +30,7 @@ class GitflowCommon {
 
     static final Long EXE_TIMEOUT = 60000L
     def envp
-    def repoDir
+    File repoDir
 
     def prefixes = [:]
 
@@ -396,15 +396,17 @@ class GitflowCommon {
     }
 
     Boolean gitflowIsInitialized() {
+        def repoExists = repoDir.exists()
         def master = getMasterBranch()
         def develop = getDevelopBranch()
         def hasMasterConfig = gitflowHasMasterConfigured()
         def hasDevelopConfig = gitflowHasDevelopConfigured()
         def hasPrefixesConfig = gitflowHasPrefixesConfigured()
         
-        log.debug("Gitflow config master=${master}, develop=${develop}, hasMasterConfig=${hasMasterConfig}, hasDevelopConfig=${hasDevelopConfig}, hasPrefixesConfig=${hasPrefixesConfig}")
+        log.debug("Gitflow config repoExists=${repoExists}, master=${master}, develop=${develop}, hasMasterConfig=${hasMasterConfig}, hasDevelopConfig=${hasDevelopConfig}, hasPrefixesConfig=${hasPrefixesConfig}")
         
-        if(hasMasterConfig &&
+        if(repoExists &&
+            hasMasterConfig &&
             hasDevelopConfig &&
             !master.equals(develop) &&
             hasPrefixesConfig){
