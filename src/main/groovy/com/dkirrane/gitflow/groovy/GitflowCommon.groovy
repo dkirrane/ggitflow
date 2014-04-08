@@ -389,7 +389,7 @@ class GitflowCommon {
 
         log.debug("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
 
-        if(feature && release && hotfix && support && versiontag){
+        if(feature && release && hotfix && support && (versiontag != null)){
             return true
         }
         return false
@@ -398,12 +398,17 @@ class GitflowCommon {
     Boolean gitflowIsInitialized() {
         def master = getMasterBranch()
         def develop = getDevelopBranch()
-        if(gitflowHasMasterConfigured() &&
-            gitflowHasDevelopConfigured() &&
-            (master != develop) &&
-            gitflowHasPrefixesConfigured()){
+        def hasMasterConfig = gitflowHasMasterConfigured()
+        def hasDevelopConfig = gitflowHasDevelopConfigured()
+        def hasPrefixesConfig = gitflowHasPrefixesConfigured()
+        
+        log.debug("Gitflow config master=${master}, develop=${develop}, hasMasterConfig=${hasMasterConfig}, hasDevelopConfig=${hasDevelopConfig}, hasPrefixesConfig=${hasPrefixesConfig}")
+        
+        if(hasMasterConfig &&
+            hasDevelopConfig &&
+            !master.equals(develop) &&
+            hasPrefixesConfig){
             return true
-
         }
         return false
     }
