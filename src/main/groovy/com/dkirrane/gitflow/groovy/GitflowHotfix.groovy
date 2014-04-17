@@ -104,7 +104,7 @@ class GitflowHotfix {
 
         // push it
         if(push && origin) {
-            Integer exitCode = init.executeRemote("git push ${origin} ${hotfixBranch}")
+            Integer exitCode = init.executeRemote("git push -u ${origin} ${hotfixBranch}")
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
@@ -264,7 +264,7 @@ class GitflowHotfix {
                     continue;
                 }                
                 log.debug "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
+                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {

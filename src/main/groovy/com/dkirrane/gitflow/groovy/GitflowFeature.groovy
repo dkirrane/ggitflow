@@ -98,7 +98,7 @@ class GitflowFeature {
 
         // push it
         if(push && origin) {
-            Integer exitCode = init.executeRemote("git push ${origin} ${featureBranch}")
+            Integer exitCode = init.executeRemote("git push -u ${origin} ${featureBranch}")
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {

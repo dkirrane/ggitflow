@@ -105,7 +105,7 @@ class GitflowRelease {
 
         // push it
         if(push && origin) {
-            Integer exitCode = init.executeRemote("git push ${origin} ${releaseBranch}")
+            Integer exitCode = init.executeRemote("git push -u ${origin} ${releaseBranch}")
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
@@ -237,7 +237,7 @@ class GitflowRelease {
                     continue;
                 }
                 log.info "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
+                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
@@ -325,7 +325,7 @@ class GitflowRelease {
                     continue;
                 }
                 log.info "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
+                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {

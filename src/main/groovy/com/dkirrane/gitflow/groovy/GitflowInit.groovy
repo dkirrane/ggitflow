@@ -141,7 +141,7 @@ class GitflowInit extends GitflowCommon {
                 log.debug "Pushing master branch to ${origin}."
                 // http://stackoverflow.com/questions/5343068/is-there-a-way-to-skip-password-typing-when-using-https-github
                 // http://stackoverflow.com/questions/6031214/git-how-to-use-netrc-file-on-windows-to-save-user-and-password
-                Integer exitCode = super.executeRemote("git push ${origin} ${masterBrnName}")
+                Integer exitCode = super.executeRemote("git push -u ${origin} ${masterBrnName}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
@@ -169,7 +169,7 @@ class GitflowInit extends GitflowCommon {
 
             if(origin) {
                 log.debug "Pushing develop branch to ${origin}."
-                Integer exitCode = super.executeRemote("git push ${origin} ${developBrnName}")
+                Integer exitCode = super.executeRemote("git push -u ${origin} ${developBrnName}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {

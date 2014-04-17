@@ -98,7 +98,7 @@ class GitflowSupport {
 
         // push it
         if(push && origin) {
-            Integer exitCode = init.executeRemote("git push ${origin} ${supportBranch}")
+            Integer exitCode = init.executeRemote("git push -u ${origin} ${supportBranch}")
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
