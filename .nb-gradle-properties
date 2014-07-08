@@ -28,6 +28,10 @@
       <task-jvm-args/>
     </task>
   </common-tasks>
+  <script-platform>
+    <spec-name>j2se</spec-name>
+    <spec-version>1.7</spec-version>
+  </script-platform>
   <built-in-tasks>
     <task>
       <display-name>debug.test.single</display-name>

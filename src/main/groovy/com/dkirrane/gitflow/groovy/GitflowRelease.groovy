@@ -163,6 +163,7 @@ class GitflowRelease {
         init.requireTagAbsent(tagName)
 
         def origin = init.getOrigin()
+        def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
             // if the origin exists, fetch and assert that
@@ -176,12 +177,16 @@ class GitflowRelease {
                 }
                 throw new GitflowException(errorMsg)
             }
-        }
-        if(init.gitBranchExists("${origin}/${releaseBranch}")){
-            init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
-        }
-        if(init.gitBranchExists("${origin}/${master}")){
-            init.requireBranchesEqual(master, "${origin}/${master}")
+
+            if(init.gitBranchExists("${origin}/${releaseBranch}")){
+                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+            }
+            if(init.gitBranchExists("${origin}/${develop}")){
+                init.requireBranchesEqual(develop, "${origin}/${develop}")
+            }
+            if(init.gitBranchExists("${origin}/${master}")){
+                init.requireBranchesEqual(master, "${origin}/${master}")
+            }
         }
 
         // try to merge into master
@@ -228,8 +233,8 @@ class GitflowRelease {
                     errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                 }
                 throw new GitflowException(errorMsg)
-            }            
-            
+            }
+
             def pushing = [master]
             for (branch in pushing) {
                 if(!init.gitBranchExists("${origin}/${branch}")){
@@ -280,11 +285,28 @@ class GitflowRelease {
         def origin = init.getOrigin()
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
-        if(init.gitBranchExists("${origin}/${releaseBranch}")){
-            init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
-        }
-        if(init.gitBranchExists("${origin}/${develop}")){
-            init.requireBranchesEqual(develop, "${origin}/${develop}")
+        if(origin){
+            // if the origin exists, fetch and assert that
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
+
+            if(init.gitBranchExists("${origin}/${releaseBranch}")){
+                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+            }
+            if(init.gitBranchExists("${origin}/${develop}")){
+                init.requireBranchesEqual(develop, "${origin}/${develop}")
+            }
+            if(init.gitBranchExists("${origin}/${master}")){
+                init.requireBranchesEqual(master, "${origin}/${master}")
+            }
         }
 
         // try to merge into develop
@@ -306,14 +328,6 @@ class GitflowRelease {
 
                 init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${releaseBranch}"])
             }
-        }
-
-        if (!keep) {
-            def curr = init.gitCurrentBranch()
-            if(releaseBranch == curr){
-                init.executeLocal("git checkout ${master}")
-            }
-            init.executeLocal("git branch -d ${releaseBranch}")
         }
 
         // push it
@@ -345,7 +359,13 @@ class GitflowRelease {
             }
         }
 
-        init.executeLocal("git checkout ${develop}")
+        if (!keep) {
+            def curr = init.gitCurrentBranch()
+            if(releaseBranch == curr){
+                init.executeLocal("git checkout ${develop}")
+            }
+            init.executeLocal("git branch -d ${releaseBranch}")
+        }
 
         log.info ""
         log.info "Summary of actions:"
