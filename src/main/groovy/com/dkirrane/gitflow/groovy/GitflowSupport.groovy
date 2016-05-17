@@ -73,7 +73,16 @@ class GitflowSupport {
         if(origin){
             // if the origin branch counterpart exists, fetch and assert that
             // the local branch isn't behind it (to avoid unnecessary rebasing)
-            init.executeRemote("git fetch --all")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your  %USERPROFILE%\\_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
 
             if(init.gitBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
@@ -89,11 +98,11 @@ class GitflowSupport {
 
         // push it
         if(push && origin) {
-            Integer exitCode = init.executeRemote("git push ${origin} ${supportBranch}")
+            Integer exitCode = init.executeRemote("git push -u ${origin} ${supportBranch}")
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                 } else {
                     errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                 }

@@ -28,9 +28,9 @@ import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 @Slf4j
 class GitflowCommon {
 
-    static final Long EXE_TIMEOUT = 120000L
+    static final Long EXE_TIMEOUT = 60000L
     def envp
-    def repoDir
+    File repoDir
 
     def prefixes = [:]
 
@@ -389,21 +389,28 @@ class GitflowCommon {
 
         log.debug("Prefixes feature=${feature}, release=${release}, hotfix=${hotfix}, support=${support}, versiontag=${versiontag}")
 
-        if(feature && release && hotfix && support){
+        if(feature && release && hotfix && support && (versiontag != null)){
             return true
         }
         return false
     }
 
     Boolean gitflowIsInitialized() {
+        def repoExists = repoDir.exists()
         def master = getMasterBranch()
         def develop = getDevelopBranch()
-        if(gitflowHasMasterConfigured() &&
-            gitflowHasDevelopConfigured() &&
-            (master != develop) &&
-            gitflowHasPrefixesConfigured()){
+        def hasMasterConfig = gitflowHasMasterConfigured()
+        def hasDevelopConfig = gitflowHasDevelopConfigured()
+        def hasPrefixesConfig = gitflowHasPrefixesConfigured()
+        
+        log.debug("Gitflow config repoExists=${repoExists}, master=${master}, develop=${develop}, hasMasterConfig=${hasMasterConfig}, hasDevelopConfig=${hasDevelopConfig}, hasPrefixesConfig=${hasPrefixesConfig}")
+        
+        if(repoExists &&
+            hasMasterConfig &&
+            hasDevelopConfig &&
+            !master.equals(develop) &&
+            hasPrefixesConfig){
             return true
-
         }
         return false
     }
@@ -436,7 +443,7 @@ class GitflowCommon {
 
     void requireCleanWorkingTree() {
         if(!this.gitIsCleanWorkingTree()){
-            throw new GitflowException("ERROR: Working tree contains unstaged or uncommited changes. Aborting.");
+            throw new GitflowException("ERROR: Git Working tree contains unstaged or uncommited changes. Aborting.");
         }
     }
 

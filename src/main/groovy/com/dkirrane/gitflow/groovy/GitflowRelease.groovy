@@ -84,7 +84,16 @@ class GitflowRelease {
         if(origin){
             // if the origin branch counterpart exists, fetch and assert that
             // the local branch isn't behind it (to avoid unnecessary rebasing)
-            init.executeRemote("git fetch --all")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
 
             if(init.gitBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
@@ -96,11 +105,11 @@ class GitflowRelease {
 
         // push it
         if(push && origin) {
-            Integer exitCode = init.executeRemote("git push ${origin} ${releaseBranch}")
+            Integer exitCode = init.executeRemote("git push -u ${origin} ${releaseBranch}")
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${releaseBranch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue pushing feature branch '${releaseBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                 } else {
                     errorMsg = "Issue pushing feature branch '${releaseBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                 }
@@ -154,16 +163,30 @@ class GitflowRelease {
         init.requireTagAbsent(tagName)
 
         def origin = init.getOrigin()
+        def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
             // if the origin exists, fetch and assert that
-            init.executeRemote("git fetch --all")
-        }
-        if(init.gitBranchExists("${origin}/${releaseBranch}")){
-            init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
-        }
-        if(init.gitBranchExists("${origin}/${master}")){
-            init.requireBranchesEqual(master, "${origin}/${master}")
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
+
+            if(init.gitBranchExists("${origin}/${releaseBranch}")){
+                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+            }
+            if(init.gitBranchExists("${origin}/${develop}")){
+                init.requireBranchesEqual(develop, "${origin}/${develop}")
+            }
+            if(init.gitBranchExists("${origin}/${master}")){
+                init.requireBranchesEqual(master, "${origin}/${master}")
+            }
         }
 
         // try to merge into master
@@ -200,18 +223,30 @@ class GitflowRelease {
 
         // push it
         if(origin) {
-            def pushing = [master,tagName]
+            log.info "Pushing ${tagName}"
+            Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
+            if(exitCodeTag){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                } else {
+                    errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
+
+            def pushing = [master]
             for (branch in pushing) {
                 if(!init.gitBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
                 log.info "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
+                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                     } else {
                         errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                     }
@@ -250,11 +285,28 @@ class GitflowRelease {
         def origin = init.getOrigin()
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
-        if(init.gitBranchExists("${origin}/${releaseBranch}")){
-            init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
-        }
-        if(init.gitBranchExists("${origin}/${develop}")){
-            init.requireBranchesEqual(develop, "${origin}/${develop}")
+        if(origin){
+            // if the origin exists, fetch and assert that
+            Integer exitCode = init.executeRemote("git fetch --all")
+            if(exitCode){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                } else {
+                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                }
+                throw new GitflowException(errorMsg)
+            }
+
+            if(init.gitBranchExists("${origin}/${releaseBranch}")){
+                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+            }
+            if(init.gitBranchExists("${origin}/${develop}")){
+                init.requireBranchesEqual(develop, "${origin}/${develop}")
+            }
+            if(init.gitBranchExists("${origin}/${master}")){
+                init.requireBranchesEqual(master, "${origin}/${master}")
+            }
         }
 
         // try to merge into develop
@@ -278,14 +330,6 @@ class GitflowRelease {
             }
         }
 
-        if (!keep) {
-            def curr = init.gitCurrentBranch()
-            if(releaseBranch == curr){
-                init.executeLocal("git checkout ${master}")
-            }
-            init.executeLocal("git branch -d ${releaseBranch}")
-        }
-
         // push it
         if(origin) {
             def pushing = [develop]
@@ -295,11 +339,11 @@ class GitflowRelease {
                     continue;
                 }
                 log.info "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push ${origin} ${branch}")
+                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
                     } else {
                         errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
                     }
@@ -315,7 +359,13 @@ class GitflowRelease {
             }
         }
 
-        init.executeLocal("git checkout ${develop}")
+        if (!keep) {
+            def curr = init.gitCurrentBranch()
+            if(releaseBranch == curr){
+                init.executeLocal("git checkout ${develop}")
+            }
+            init.executeLocal("git branch -d ${releaseBranch}")
+        }
 
         log.info ""
         log.info "Summary of actions:"
