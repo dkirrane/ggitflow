@@ -1,8 +1,8 @@
-# This must be configured if you want to deploy to the Nexus OSS Public Repo
-mavenUsername=usernameHere
-mavenPassword=passwordHere
+# A gradle.properties file must be configured if you want to deploy to the Sonatype Nexus OSS Public Repo
+sonatypeUsername=usernameHere
+sonatypePassword=passwordHere
 
 # http://www.gradle.org/docs/current/userguide/signing_plugin.html
-signing.keyId=24875D73
-signing.password=secret
-signing.secretKeyRingFile=/Users/me/.gnupg/secring.gpg
+# signing.keyId=24875D73
+# signing.password=secret
+# signing.secretKeyRingFile=/Users/me/.gnupg/secring.gpg

@@ -443,7 +443,7 @@ class GitflowCommon {
 
     void requireCleanWorkingTree() {
         if(!this.gitIsCleanWorkingTree()){
-            throw new GitflowException("ERROR: Working tree contains unstaged or uncommited changes. Aborting.");
+            throw new GitflowException("ERROR: Git Working tree contains unstaged or uncommited changes. Aborting.");
         }
     }
 

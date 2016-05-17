@@ -57,3 +57,5 @@ target/
 /.nb-gradle/profiles/private/
 /log/
 /.nb-gradle/private/
+/.nb-gradle/
+gradle.properties
