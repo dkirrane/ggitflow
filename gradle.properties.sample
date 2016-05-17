@@ -2,7 +2,15 @@
 sonatypeUsername=usernameHere
 sonatypePassword=passwordHere
 
+# For Release versions the Sonatype Nexus Stage rules require artifacts to be signed
 # http://www.gradle.org/docs/current/userguide/signing_plugin.html
-# signing.keyId=24875D73
-# signing.password=secret
-# signing.secretKeyRingFile=/Users/me/.gnupg/secring.gpg
+# http://blog.sonatype.com/2010/01/how-to-generate-pgp-signatures-with-maven/
+#       1. Install gpg
+#       2. Generate a Key Pair: gpg --gen-key
+#       3. Distribute Public Key: gpg --keyserver hkp://pgp.mit.edu --send-keys XXXXXX
+#       4. Update signing properties details below
+#       5. Run Gradle deploy: gradle clean install upload -xtest -c settings.gradle
+#       6. Login to Nexus to release from the Stage: https://oss.sonatype.org > Login > Staging Repositories > Search for: com.dkirrane > Release
+signing.keyId=XXXXXX
+signing.password=keyPassphrase
+signing.secretKeyRingFile=C:/Users/me/.gnupg/secring.gpg
