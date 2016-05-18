@@ -142,7 +142,7 @@ class GitflowRelease {
         if(!releaseBranchName) {
             throw new GitflowException("Missing argument <releaseBranchName>")
         }
-        if(!pushMerge) {
+        if(pushMerge == null) {
             throw new GitflowException("Missing argument <pushMerge>")
         }
         if(!init.gitflowIsInitialized()){
@@ -266,7 +266,7 @@ class GitflowRelease {
         if(!releaseBranchName) {
             throw new GitflowException("Missing argument <releaseBranchName>")
         }
-        if(!pushMerge) {
+        if(pushMerge == null) {
             throw new GitflowException("Missing argument <pushMerge>")
         }        
         if(!init.gitflowIsInitialized()){
@@ -390,7 +390,7 @@ class GitflowRelease {
         if(pushMerge && origin){
             log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
         } else {
-            log.warn "- 'Once happy with the merge you MUST push ${develop}', '${master}' and ${tagName} to '${origin}'"
+            log.warn "- 'Once happy with the merge you MUST push ${develop}', '${master}' and tag ${tagName} to '${origin}'"
         }
         log.info ""
     }

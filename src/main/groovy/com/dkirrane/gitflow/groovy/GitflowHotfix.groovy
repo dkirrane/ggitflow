@@ -389,7 +389,7 @@ class GitflowHotfix {
         if(pushMerge && origin){
             log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
         } else {
-            log.warn "- 'Once happy with the merge you MUST push ${develop}', '${master}' and ${tagName} to '${origin}'"
+            log.warn "- 'Once happy with the merge you MUST push ${develop}', '${master}' and tag ${tagName} to '${origin}'"
         }
         log.info ""
     }
