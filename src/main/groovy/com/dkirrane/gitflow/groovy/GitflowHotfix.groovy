@@ -390,7 +390,7 @@ class GitflowHotfix {
             log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
         } else {
             log.info ""
-            log.warn "- 'Once happy with the merge you MUST manually push ${develop}', '${master}' and tag ${tagName} to '${origin}'"
+            log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}'"
             log.info ""
         }
         log.info ""
