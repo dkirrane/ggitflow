@@ -87,7 +87,7 @@ class GitflowFeature {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
         }
@@ -197,10 +197,10 @@ class GitflowFeature {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${featureBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${featureBranch}")){
                 init.requireBranchesEqual(featureBranch, "${origin}/${featureBranch}")
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
         }

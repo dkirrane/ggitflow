@@ -94,7 +94,7 @@ class GitflowHotfix {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -168,7 +168,7 @@ class GitflowHotfix {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are equal
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -180,13 +180,13 @@ class GitflowHotfix {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${hotfixBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
                 init.requireBranchesEqual(hotfixBranch, "${origin}/${hotfixBranch}")
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -239,7 +239,7 @@ class GitflowHotfix {
 
             def pushing = [master]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
@@ -303,13 +303,13 @@ class GitflowHotfix {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${hotfixBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
                 init.requireBranchesEqual(hotfixBranch, "${origin}/${hotfixBranch}")
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -339,7 +339,7 @@ class GitflowHotfix {
         if(pushMerge && origin) {
             def pushing = [develop]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }

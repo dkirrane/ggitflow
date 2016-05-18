@@ -95,7 +95,7 @@ class GitflowRelease {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
         }
@@ -181,13 +181,13 @@ class GitflowRelease {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${releaseBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
                 init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -240,7 +240,7 @@ class GitflowRelease {
 
             def pushing = [master]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
@@ -304,13 +304,13 @@ class GitflowRelease {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${releaseBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
                 init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -340,7 +340,7 @@ class GitflowRelease {
         if(pushMerge && origin) {
             def pushing = [develop]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
