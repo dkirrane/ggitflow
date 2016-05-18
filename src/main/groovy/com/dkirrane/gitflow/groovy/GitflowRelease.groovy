@@ -131,16 +131,19 @@ class GitflowRelease {
 
     }
 
-    void finish(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
-        finishToMaster(releaseBranchName)
-        finishToDevelop(releaseBranchName)
+    void finish(String releaseBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
+        finishToMaster(releaseBranchName, pushMerge)
+        finishToDevelop(releaseBranchName, pushMerge)
     }
 
-    void finishToMaster(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finishToMaster(String releaseBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!releaseBranchName) {
             throw new GitflowException("Missing argument <releaseBranchName>")
+        }
+        if(!pushMerge) {
+            throw new GitflowException("Missing argument <pushMerge>")
         }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
@@ -222,7 +225,7 @@ class GitflowRelease {
         }
 
         // push it
-        if(origin) {
+        if(pushMerge && origin) {
             log.info "Pushing ${tagName}"
             Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
             if(exitCodeTag){
@@ -257,12 +260,15 @@ class GitflowRelease {
 
     }
 
-    void finishToDevelop(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finishToDevelop(String releaseBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!releaseBranchName) {
             throw new GitflowException("Missing argument <releaseBranchName>")
         }
+        if(!pushMerge) {
+            throw new GitflowException("Missing argument <pushMerge>")
+        }        
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
         }
@@ -331,7 +337,7 @@ class GitflowRelease {
         }
 
         // push it
-        if(origin) {
+        if(pushMerge && origin) {
             def pushing = [develop]
             for (branch in pushing) {
                 if(!init.gitBranchExists("${origin}/${branch}")){
@@ -381,8 +387,10 @@ class GitflowRelease {
         else {
             log.info "- Release branch '${releaseBranch}' has been deleted"
         }
-        if(push && origin){
+        if(pushMerge && origin){
             log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
+        } else {
+            log.warn "- 'Once happy with the merge you MUST push ${develop}', '${master}' and ${tagName} to '${origin}'"
         }
         log.info ""
     }
