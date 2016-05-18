@@ -310,9 +310,9 @@ class GitflowRelease {
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitRemoteBranchExists("${origin}/${master}")){
-                init.requireBranchesEqual(master, "${origin}/${master}")
-            }
+//            if(init.gitRemoteBranchExists("${origin}/${master}")){
+//                init.requireBranchesEqual(master, "${origin}/${master}")
+//            }
         }
 
         // try to merge into develop

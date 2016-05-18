@@ -448,14 +448,13 @@ class GitflowCommon {
     }
 
     void requireLocalBranch(String branchName) {
-        List branches = this.gitLocalBranches()
-        if(!branches.contains(branchName)){
+        if(!gitLocalBranchExists(branchName)){
             throw new GitflowException("ERROR: Local branch '${branchName}' does not exist and is required. Aborting.");
         }
     }
 
     void requireRemoteBranch(String branchName) {
-        if(gitRemoteBranchExists(branchName)) {
+        if(!gitRemoteBranchExists(branchName)) {
             throw new GitflowException("ERROR: Remote branch '${branchName}' does not exist and is required. Aborting.");
         }
     }
