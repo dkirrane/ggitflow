@@ -170,9 +170,9 @@ class GitflowFeature {
                 log.warn "    git mergetool"
                 log.warn "    git commit"
                 log.warn ""
-                log.warn "You can then complete the finish by running feature finish again"
+                log.warn "You can then complete the finish by running feature-finish again"
                 log.warn ""
-                //            System.exit(1)
+                throw new GitflowMergeConflictException("Merge conflicts not resolved yet")
             }
         }
 
@@ -279,7 +279,7 @@ class GitflowFeature {
         def origin = init.getOrigin()
         if(origin && !keep){
             //Delete remote feature branch
-            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${featureBranchName}")){
                 init.executeRemote("git push ${origin} :${featureBranchName}")
             }             
         }
