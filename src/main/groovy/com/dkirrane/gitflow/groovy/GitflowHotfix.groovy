@@ -168,7 +168,7 @@ class GitflowHotfix {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that branches are equal
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -181,7 +181,7 @@ class GitflowHotfix {
             }
 
             if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
-                init.requireBranchesEqual(hotfixBranch, "${origin}/${hotfixBranch}")
+                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
@@ -291,7 +291,7 @@ class GitflowHotfix {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -304,7 +304,7 @@ class GitflowHotfix {
             }
 
             if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
-                init.requireBranchesEqual(hotfixBranch, "${origin}/${hotfixBranch}")
+                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")

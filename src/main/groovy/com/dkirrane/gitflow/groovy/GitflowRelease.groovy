@@ -169,7 +169,7 @@ class GitflowRelease {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -182,7 +182,7 @@ class GitflowRelease {
             }
 
             if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
-                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+                init.requireLocalBranchNotBehind(releaseBranch, "${origin}/${releaseBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
@@ -292,7 +292,7 @@ class GitflowRelease {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -305,7 +305,7 @@ class GitflowRelease {
             }
 
             if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
-                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+                init.requireLocalBranchNotBehind(releaseBranch, "${origin}/${releaseBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")

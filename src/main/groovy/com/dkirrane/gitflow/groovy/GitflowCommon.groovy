@@ -488,6 +488,18 @@ class GitflowCommon {
             throw new GitflowException("ERROR: Branches '${branch1}' and '${branch2}' must be at the same commit. Aborting");
         }
     }
+    
+    void requireLocalBranchNotBehind(String branch1, String branch2) {
+        requireLocalBranch(branch1)
+        requireRemoteBranch(branch2)
+        Integer result = gitCompareBranches(branch1, branch2)
+        // 0 branches are equal
+        // 2 remote branch2 is behind local branch1
+        // If result is 0 or 2 we are ok
+        if(0 != result || 2 != result){         
+            throw new GitflowException("ERROR: Local '${branch1}' branch must not be behind remote '${branch2}' branch. Aborting");
+        }
+    }    
 
     static void main(String[] args) {
         GitflowCommon common = new GitflowCommon()
