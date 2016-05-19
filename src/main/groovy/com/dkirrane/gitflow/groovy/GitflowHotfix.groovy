@@ -94,7 +94,7 @@ class GitflowHotfix {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -130,16 +130,19 @@ class GitflowHotfix {
 
     }
 
-    void finish(String hotfixBranchName) throws GitflowException, GitflowMergeConflictException {
-        finishToMaster(hotfixBranchName)
-        finishToDevelop(hotfixBranchName)
+    void finish(String hotfixBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
+        finishToMaster(hotfixBranchName, pushMerge)
+        finishToDevelop(hotfixBranchName, pushMerge)
     }
 
-    void finishToMaster(String hotfixBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finishToMaster(String hotfixBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!hotfixBranchName) {
             throw new GitflowException("Missing argument <hotfixBranchName>")
+        }
+        if(pushMerge == null) {
+            throw new GitflowException("Missing argument <pushMerge>")
         }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
@@ -165,7 +168,7 @@ class GitflowHotfix {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -177,13 +180,13 @@ class GitflowHotfix {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${hotfixBranch}")){
-                init.requireBranchesEqual(hotfixBranch, "${origin}/${hotfixBranch}")
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
+                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -207,7 +210,6 @@ class GitflowHotfix {
             }
         }
 
-
         if(!init.gitTagExists(tagName)){
             log.info "Tagging hotfix branch ${hotfixBranch} on ${master}"
             def tagMsg = "Hotfix version ${tagName}"
@@ -222,7 +224,7 @@ class GitflowHotfix {
         }
 
         // push it
-        if(origin) {
+        if(pushMerge && origin) {
             log.info "Pushing ${tagName}"
             Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
             if(exitCodeTag){
@@ -237,7 +239,7 @@ class GitflowHotfix {
 
             def pushing = [master]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
@@ -257,11 +259,14 @@ class GitflowHotfix {
 
     }
 
-    void finishToDevelop(String hotfixBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finishToDevelop(String hotfixBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!hotfixBranchName) {
             throw new GitflowException("Missing argument <hotfixBranchName>")
+        }
+        if(pushMerge == null) {
+            throw new GitflowException("Missing argument <pushMerge>")
         }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
@@ -286,7 +291,7 @@ class GitflowHotfix {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -298,14 +303,11 @@ class GitflowHotfix {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${hotfixBranch}")){
-                init.requireBranchesEqual(hotfixBranch, "${origin}/${hotfixBranch}")
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
+                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
-            }
-            if(init.gitBranchExists("${origin}/${master}")){
-                init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
 
@@ -331,10 +333,10 @@ class GitflowHotfix {
         }
 
         // push it
-        if(origin) {
+        if(pushMerge && origin) {
             def pushing = [develop]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
@@ -352,11 +354,11 @@ class GitflowHotfix {
             }
         }
 
-        if(push && origin){
+        if(origin && !keep){
             //Delete remote hotfix branch
-            if (!keep) {
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
                 init.executeRemote("git push ${origin} :${hotfixBranch}")
-            }
+            }           
         }
 
         if (!keep) {
@@ -381,8 +383,12 @@ class GitflowHotfix {
         else {
             "- Hotfix branch '${hotfixBranch}' has been deleted"
         }
-        if(push && origin){
+        if(pushMerge && origin){
             log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
+        } else {
+            log.info ""
+            log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}'"
+            log.info ""
         }
         log.info ""
     }

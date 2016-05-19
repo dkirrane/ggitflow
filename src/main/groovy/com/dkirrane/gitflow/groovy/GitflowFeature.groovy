@@ -87,7 +87,7 @@ class GitflowFeature {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
         }
@@ -170,9 +170,9 @@ class GitflowFeature {
                 log.warn "    git mergetool"
                 log.warn "    git commit"
                 log.warn ""
-                log.warn "You can then complete the finish by running feature finish again"
+                log.warn "You can then complete the finish by running feature-finish again"
                 log.warn ""
-                //            System.exit(1)
+                throw new GitflowMergeConflictException("Merge conflicts not resolved yet")
             }
         }
 
@@ -197,10 +197,10 @@ class GitflowFeature {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${featureBranch}")){
+            if(init.gitRemoteBranchExists("${origin}/${featureBranch}")){
                 init.requireBranchesEqual(featureBranch, "${origin}/${featureBranch}")
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
         }
@@ -277,8 +277,11 @@ class GitflowFeature {
 
         // delete branch
         def origin = init.getOrigin()
-        if(push && origin && !keep){
-            init.executeRemote("git push ${origin} :refs/heads/${featureBranchName}")
+        if(origin && !keep){
+            //Delete remote feature branch
+            if(init.gitRemoteBranchExists("${origin}/${featureBranchName}")){
+                init.executeRemote("git push ${origin} :${featureBranchName}")
+            }             
         }
 
         if (!keep) {

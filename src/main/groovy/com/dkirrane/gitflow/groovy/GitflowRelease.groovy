@@ -95,7 +95,7 @@ class GitflowRelease {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
         }
@@ -131,16 +131,19 @@ class GitflowRelease {
 
     }
 
-    void finish(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
-        finishToMaster(releaseBranchName)
-        finishToDevelop(releaseBranchName)
+    void finish(String releaseBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
+        finishToMaster(releaseBranchName, pushMerge)
+        finishToDevelop(releaseBranchName, pushMerge)
     }
 
-    void finishToMaster(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finishToMaster(String releaseBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!releaseBranchName) {
             throw new GitflowException("Missing argument <releaseBranchName>")
+        }
+        if(pushMerge == null) {
+            throw new GitflowException("Missing argument <pushMerge>")
         }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
@@ -166,7 +169,7 @@ class GitflowRelease {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -178,13 +181,13 @@ class GitflowRelease {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${releaseBranch}")){
-                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
+                init.requireLocalBranchNotBehind(releaseBranch, "${origin}/${releaseBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-            if(init.gitBranchExists("${origin}/${master}")){
+            if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
@@ -222,7 +225,7 @@ class GitflowRelease {
         }
 
         // push it
-        if(origin) {
+        if(pushMerge && origin) {
             log.info "Pushing ${tagName}"
             Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
             if(exitCodeTag){
@@ -237,7 +240,7 @@ class GitflowRelease {
 
             def pushing = [master]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
@@ -257,12 +260,15 @@ class GitflowRelease {
 
     }
 
-    void finishToDevelop(String releaseBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finishToDevelop(String releaseBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
         init.requireGitRepo()
 
         if(!releaseBranchName) {
             throw new GitflowException("Missing argument <releaseBranchName>")
         }
+        if(pushMerge == null) {
+            throw new GitflowException("Missing argument <pushMerge>")
+        }        
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
         }
@@ -286,7 +292,7 @@ class GitflowRelease {
         def develop = init.getDevelopBranch()
         def master = init.getMasterBranch()
         if(origin){
-            // if the origin exists, fetch and assert that
+            // if the origin exists, fetch and assert that branches are at the same commit
             Integer exitCode = init.executeRemote("git fetch --all")
             if(exitCode){
                 def errorMsg
@@ -298,14 +304,11 @@ class GitflowRelease {
                 throw new GitflowException(errorMsg)
             }
 
-            if(init.gitBranchExists("${origin}/${releaseBranch}")){
-                init.requireBranchesEqual(releaseBranch, "${origin}/${releaseBranch}")
+            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
+                init.requireLocalBranchNotBehind(releaseBranch, "${origin}/${releaseBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
-            if(init.gitBranchExists("${origin}/${develop}")){
+            if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
-            }
-            if(init.gitBranchExists("${origin}/${master}")){
-                init.requireBranchesEqual(master, "${origin}/${master}")
             }
         }
 
@@ -331,10 +334,10 @@ class GitflowRelease {
         }
 
         // push it
-        if(origin) {
+        if(pushMerge && origin) {
             def pushing = [develop]
             for (branch in pushing) {
-                if(!init.gitBranchExists("${origin}/${branch}")){
+                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
                     log.debug "Remote branch ${branch} does not exists. Skipping push"
                     continue;
                 }
@@ -352,12 +355,12 @@ class GitflowRelease {
             }
         }
 
-        if(push && origin){
+        if(origin && !keep){
             //Delete remote release branch
-            if (!keep) {
+            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
                 init.executeRemote("git push ${origin} :${releaseBranch}")
-            }
-        }
+            }           
+        }        
 
         if (!keep) {
             def curr = init.gitCurrentBranch()
@@ -381,8 +384,12 @@ class GitflowRelease {
         else {
             log.info "- Release branch '${releaseBranch}' has been deleted"
         }
-        if(push && origin){
+        if(pushMerge && origin){
             log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
+        } else {
+            log.info ""
+            log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}'"
+            log.info ""
         }
         log.info ""
     }
