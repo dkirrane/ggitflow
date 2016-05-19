@@ -267,7 +267,7 @@ class GitflowHotfix {
         }
         if(pushMerge == null) {
             throw new GitflowException("Missing argument <pushMerge>")
-        }        
+        }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
         }
@@ -309,9 +309,6 @@ class GitflowHotfix {
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-//            if(init.gitRemoteBranchExists("${origin}/${master}")){
-//                init.requireBranchesEqual(master, "${origin}/${master}")
-//            }
         }
 
         // try to merge into develop
@@ -357,11 +354,11 @@ class GitflowHotfix {
             }
         }
 
-        if(push && origin){
+        if(origin && !keep){
             //Delete remote hotfix branch
-            if (!keep) {
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
                 init.executeRemote("git push ${origin} :${hotfixBranch}")
-            }
+            }           
         }
 
         if (!keep) {

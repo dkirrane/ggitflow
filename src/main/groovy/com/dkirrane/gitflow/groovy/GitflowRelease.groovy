@@ -310,9 +310,6 @@ class GitflowRelease {
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
-//            if(init.gitRemoteBranchExists("${origin}/${master}")){
-//                init.requireBranchesEqual(master, "${origin}/${master}")
-//            }
         }
 
         // try to merge into develop
@@ -358,12 +355,12 @@ class GitflowRelease {
             }
         }
 
-        if(push && origin){
+        if(origin && !keep){
             //Delete remote release branch
-            if (!keep) {
+            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
                 init.executeRemote("git push ${origin} :${releaseBranch}")
-            }
-        }
+            }           
+        }        
 
         if (!keep) {
             def curr = init.gitCurrentBranch()
