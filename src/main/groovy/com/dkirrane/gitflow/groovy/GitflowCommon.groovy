@@ -495,8 +495,8 @@ class GitflowCommon {
         Integer result = gitCompareBranches(branch1, branch2)
         // 0 branches are equal
         // 2 remote branch2 is behind local branch1
-        // If result is 0 or 2 we are ok
-        if(0 != result || 2 != result){         
+        // If result is not 0 or 2 then branch1 must be behind branch2
+        if([0, 2].contains(result) == false){         
             throw new GitflowException("ERROR: Local '${branch1}' branch must not be behind remote '${branch2}' branch. Aborting");
         }
     }    
