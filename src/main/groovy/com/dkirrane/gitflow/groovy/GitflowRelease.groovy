@@ -32,7 +32,8 @@ class GitflowRelease {
     def squash
     def sign
     def signingkey
-    def keep
+    def keepLocal
+    def keepRemote
     def msgPrefix
     def msgSuffix
     def push
@@ -268,7 +269,7 @@ class GitflowRelease {
         }
         if(pushMerge == null) {
             throw new GitflowException("Missing argument <pushMerge>")
-        }        
+        }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
         }
@@ -355,19 +356,21 @@ class GitflowRelease {
             }
         }
 
-        if(origin && !keep){
+        if(origin && !keepRemote){
             //Delete remote release branch
             if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
                 init.executeRemote("git push ${origin} :${releaseBranch}")
-            }           
-        }        
-
-        if (!keep) {
-            def curr = init.gitCurrentBranch()
-            if(releaseBranch == curr){
-                init.executeLocal("git checkout ${develop}")
             }
-            init.executeLocal("git branch -d ${releaseBranch}")
+        }
+
+        if (!keepLocal) {
+            if(init.gitIsBranchMergedInto(releaseBranch, ${develop})){
+                def curr = init.gitCurrentBranch()
+                if(releaseBranch == curr){
+                    init.executeLocal("git checkout ${develop}")
+                }
+                init.executeLocal("git branch -D ${releaseBranch}")
+            }
         }
 
         log.info ""
@@ -378,18 +381,29 @@ class GitflowRelease {
         log.info "- Release branch has been merged into '${master}'"
         log.info "- The release was tagged '${tagName}'"
         log.info "- Release branch has been back-merged into '${develop}'"
-        if(keep){
-            log.info "- Release branch '${releaseBranch}' is still available"
+        if(keepLocal) {
+            log.info "- Local Release branch '${releaseBranch}' is still available"
         }
         else {
-            log.info "- Release branch '${releaseBranch}' has been deleted"
+            log.info "- Local Release branch '${releaseBranch}' has been deleted"
         }
-        if(pushMerge && origin){
-            log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
-        } else {
-            log.info ""
-            log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}'"
-            log.info ""
+        if(origin){
+            if(keepRemote) {
+                log.info "- Remote Release branch '${releaseBranch}' is still available from '${origin}'"
+            }
+            else {
+                log.info "- Remote Release branch '${releaseBranch}' has been deleted from '${origin}'"
+            }
+            if(pushMerge) {
+                log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
+            } else {
+                log.info ""
+                log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}' :"
+                log.warn "        'git push ${origin} ${develop}"
+                log.warn "        'git push ${origin} ${master}"
+                log.warn "        'git push ${origin} ${tagName}"
+                log.info ""
+            }
         }
         log.info ""
     }

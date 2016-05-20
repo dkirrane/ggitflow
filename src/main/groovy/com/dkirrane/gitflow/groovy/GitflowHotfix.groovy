@@ -32,7 +32,8 @@ class GitflowHotfix {
     def squash
     def sign
     def signingkey
-    def keep
+    def keepLocal
+    def keepRemote
     def msgPrefix
     def msgSuffix
     def push
@@ -354,19 +355,21 @@ class GitflowHotfix {
             }
         }
 
-        if(origin && !keep){
+        if(origin && !keepRemote){
             //Delete remote hotfix branch
             if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
                 init.executeRemote("git push ${origin} :${hotfixBranch}")
-            }           
+            }
         }
 
-        if (!keep) {
-            def curr = init.gitCurrentBranch()
-            if(hotfixBranch == curr){
-                init.executeLocal("git checkout ${develop}")
+        if (!keepLocal) {
+            if(init.gitIsBranchMergedInto(hotfixBranch, ${develop})){
+                def curr = init.gitCurrentBranch()
+                if(hotfixBranch == curr){
+                    init.executeLocal("git checkout ${develop}")
+                }
+                init.executeLocal("git branch -D ${hotfixBranch}")
             }
-            init.executeLocal("git branch -d ${hotfixBranch}")
         }
 
         log.info ""
@@ -377,18 +380,29 @@ class GitflowHotfix {
         log.info "- Hotfix branch has been merged into '${master}'"
         log.info "- The hotfix was tagged '${tagName}'"
         log.info "- Hotfix branch has been back-merged into '${develop}'"
-        if(keep){
-            log.info "- Hotfix branch '${hotfixBranch}' is still available"
+        if(keepLocal) {
+            log.info "- Local Hotfix branch '${hotfixBranch}' is still available"
         }
         else {
-            "- Hotfix branch '${hotfixBranch}' has been deleted"
+            log.info "- Local Hotfix branch '${hotfixBranch}' has been deleted"
         }
-        if(pushMerge && origin){
-            log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
-        } else {
-            log.info ""
-            log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}'"
-            log.info ""
+        if(origin){
+            if(keepRemote) {
+                log.info "- Remote Hotfix branch '${hotfixBranch}' is still available from '${origin}'"
+            }
+            else {
+                log.info "- Remote Hotfix branch '${hotfixBranch}' has been deleted from '${origin}'"
+            }
+            if(pushMerge) {
+                log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
+            } else {
+                log.info ""
+                log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}' :"
+                log.warn "        'git push ${origin} ${develop}"
+                log.warn "        'git push ${origin} ${master}"
+                log.warn "        'git push ${origin} ${tagName}"
+                log.info ""
+            }
         }
         log.info ""
     }

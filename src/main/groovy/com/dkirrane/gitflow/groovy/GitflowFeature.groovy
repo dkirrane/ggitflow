@@ -33,7 +33,8 @@ class GitflowFeature {
     def isRebase
     def isInteractive
     def squash
-    def keep
+    def keepLocal
+    def keepRemote
     def msgPrefix
     def msgSuffix
     def push
@@ -277,21 +278,41 @@ class GitflowFeature {
 
         // delete branch
         def origin = init.getOrigin()
-        if(origin && !keep){
+        if(origin && !keepRemote){
             //Delete remote feature branch
             if(init.gitRemoteBranchExists("${origin}/${featureBranchName}")){
                 init.executeRemote("git push ${origin} :${featureBranchName}")
-            }             
+            }
         }
 
-        if (!keep) {
-            init.executeLocal("git branch -d ${featureBranchName}")
+        if (!keepLocal) {
+            if(init.gitIsBranchMergedInto(featureBranchName, ${develop})){
+                def curr = init.gitCurrentBranch()
+                if(featureBranchName == curr){
+                    init.executeLocal("git checkout ${develop}")
+                }
+                init.executeLocal("git branch -D ${featureBranchName}")
+            }
         }
 
         log.info ""
         log.info "Summary of actions:"
         log.info "- The feature branch '${featureBranchName}' was merged into '${developBranch}'"
         log.info "- You are now on branch '${developBranch}'"
+        if(keepLocal) {
+            log.info "- Local Feature branch '${featureBranchName}' is still available"
+        }
+        else {
+            log.info "- Local Feature branch '${featureBranchName}' has been deleted"
+        }
+        if(origin) {
+            if(keepRemote) {
+                log.info "- Remote Feature branch '${featureBranchName}' is still available from '${origin}'"
+            }
+            else {
+                log.info "- Remote Feature branch '${featureBranchName}' has been deleted from '${origin}'"
+            }
+        }
         log.info ""
     }
 
