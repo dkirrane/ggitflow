@@ -363,7 +363,7 @@ class GitflowHotfix {
         }
 
         if (!keepLocal) {
-            if(init.gitIsBranchMergedInto(hotfixBranch, ${develop})){
+            if(init.gitIsBranchMergedInto(hotfixBranch, develop)){
                 def curr = init.gitCurrentBranch()
                 if(hotfixBranch == curr){
                     init.executeLocal("git checkout ${develop}")
@@ -397,10 +397,18 @@ class GitflowHotfix {
                 log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
             } else {
                 log.info ""
-                log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}' :"
-                log.warn "        'git push ${origin} ${develop}"
-                log.warn "        'git push ${origin} ${master}"
-                log.warn "        'git push ${origin} ${tagName}"
+                log.warn "===> Once happy with the merge you MUST manually push '${develop}', '${master}' and tag '${tagName}' to '${origin}':"
+                log.warn ""
+                log.warn "        git push ${origin} ${develop}"
+                log.warn "        git push ${origin} ${master}"
+                log.warn "        git push ${origin} ${tagName}"
+                log.warn ""
+                if(keepRemote) {
+                    log.warn ""
+                    log.warn "===> And manually delete the remote Hotfix branch '${hotfixBranch}':"
+                    log.warn ""
+                    log.warn "        git push ${origin} --delete ${hotfixBranch}"
+                }                  
                 log.info ""
             }
         }

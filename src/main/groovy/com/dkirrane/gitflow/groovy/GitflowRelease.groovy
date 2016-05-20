@@ -364,7 +364,7 @@ class GitflowRelease {
         }
 
         if (!keepLocal) {
-            if(init.gitIsBranchMergedInto(releaseBranch, ${develop})){
+            if(init.gitIsBranchMergedInto(releaseBranch, develop)){
                 def curr = init.gitCurrentBranch()
                 if(releaseBranch == curr){
                     init.executeLocal("git checkout ${develop}")
@@ -398,10 +398,17 @@ class GitflowRelease {
                 log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
             } else {
                 log.info ""
-                log.warn "- 'Once happy with the merge you MUST manually push '${develop}', '${master}' and tag ${tagName} to '${origin}' :"
-                log.warn "        'git push ${origin} ${develop}"
-                log.warn "        'git push ${origin} ${master}"
-                log.warn "        'git push ${origin} ${tagName}"
+                log.warn "===> Once happy with the merge you MUST manually push '${develop}', '${master}' and tag '${tagName}' to '${origin}':"
+                log.warn ""
+                log.warn "        git push ${origin} ${develop}"
+                log.warn "        git push ${origin} ${master}"
+                log.warn "        git push ${origin} ${tagName}"
+                log.warn ""
+                if(keepRemote) {
+                    log.warn "===> And manually delete the remote Release branch '${releaseBranch}':"
+                    log.warn ""
+                    log.warn "        git push ${origin} --delete ${releaseBranch}"
+                }                
                 log.info ""
             }
         }
