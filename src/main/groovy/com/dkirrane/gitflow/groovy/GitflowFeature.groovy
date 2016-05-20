@@ -33,7 +33,8 @@ class GitflowFeature {
     def isRebase
     def isInteractive
     def squash
-    def keep
+    def keepLocal
+    def keepRemote
     def msgPrefix
     def msgSuffix
     def push
@@ -112,7 +113,7 @@ class GitflowFeature {
 
         log.info ""
         log.info "Summary of actions:"
-        log.info "- A new branch '${featureBranch}' was created, based on '${init.getDevelopBranch()}'"
+        log.info "- A new branch '${featureBranch}' was created, based on '${develop}'"
         log.info "- You are now on branch '${featureBranch}'"
         log.info ""
         log.info "Now, start committing on your feature. When done, use:"
@@ -156,7 +157,7 @@ class GitflowFeature {
                 // We detect this using git_is_branch_merged_into()
                 if(init.gitIsBranchMergedInto(featureBranch, finishBase)) {
                     init.executeLocal("rm -f ${mergeBasePath}")
-                    helperFinishCleanup()
+                    this.helperFinishCleanup(featureBranch)
                     System.exit(0)
                 } else {
                     // If the user cancelled the merge and decided to wait until later,
@@ -270,28 +271,49 @@ class GitflowFeature {
         }
     }
 
-    private void helperFinishCleanup(String featureBranchName) {
-        init.requireBranch(featureBranchName)
+    private void helperFinishCleanup(String featureBranch) {
+        init.requireBranch(featureBranch)
 
         init.requireCleanWorkingTree()
 
         // delete branch
         def origin = init.getOrigin()
-        if(origin && !keep){
+        def develop = init.getDevelopBranch()
+        if(origin && !keepRemote){
             //Delete remote feature branch
-            if(init.gitRemoteBranchExists("${origin}/${featureBranchName}")){
-                init.executeRemote("git push ${origin} :${featureBranchName}")
-            }             
+            if(init.gitRemoteBranchExists("${origin}/${featureBranch}")){
+                init.executeRemote("git push ${origin} :${featureBranch}")
+            }
         }
 
-        if (!keep) {
-            init.executeLocal("git branch -d ${featureBranchName}")
+        if (!keepLocal) {            
+            if(init.gitIsBranchMergedInto(featureBranch, develop)){
+                def curr = init.gitCurrentBranch()
+                if(featureBranch == curr){
+                    init.executeLocal("git checkout ${develop}")
+                }
+                init.executeLocal("git branch -D ${featureBranch}")
+            }
         }
 
         log.info ""
         log.info "Summary of actions:"
-        log.info "- The feature branch '${featureBranchName}' was merged into '${developBranch}'"
-        log.info "- You are now on branch '${developBranch}'"
+        log.info "- The feature branch '${featureBranch}' was merged into '${develop}'"
+        log.info "- You are now on branch '${develop}'"
+        if(keepLocal) {
+            log.info "- Local Feature branch '${featureBranch}' is still available"
+        }
+        else {
+            log.info "- Local Feature branch '${featureBranch}' has been deleted"
+        }
+        if(origin) {
+            if(keepRemote) {
+                log.info "- Remote Feature branch '${featureBranch}' is still available from '${origin}'"
+            }
+            else {
+                log.info "- Remote Feature branch '${featureBranch}' has been deleted from '${origin}'"
+            }
+        }
         log.info ""
     }
 
