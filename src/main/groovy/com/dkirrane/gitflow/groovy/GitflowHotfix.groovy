@@ -71,7 +71,8 @@ class GitflowHotfix {
         // require_no_existing_hotfix_branches
         List<String> allBranches = init.gitAllBranches()
         if( allBranches.any({ it.contains(prefix) }) ){
-            throw new GitflowException("There is an existing hotfix branch. Finish that one first.")
+            def found = allBranches.findAll { it.contains(prefix) }
+            throw new GitflowException("There is an existing hotfix branch. Finish that one first: ${found}")
         }
 
         // require_clean_working_tree

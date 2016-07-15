@@ -71,7 +71,8 @@ class GitflowRelease {
         // require_no_existing_release_branches
         List<String> allBranches = init.gitAllBranches()
         if( allBranches.any({ it.contains(prefix) }) ){
-            throw new GitflowException("There is an existing release branch. Finish that one first.")
+            def found = allBranches.findAll { it.contains(prefix) }
+            throw new GitflowException("There is an existing release branch. Finish that one first: ${found}")
         }
 
         // require_clean_working_tree

@@ -67,6 +67,7 @@ class GitflowCommon {
             }
         } else {
             if(error.toString()) {
+                log.warn "Executing command: '${cmd}'"
                 log.warn error.toString()
             }
         }
