@@ -330,6 +330,7 @@ class GitflowCommon {
      * </pre>
      */
     Integer gitCompareBranches(String branch1, String branch2) {
+        log.debug("Comparing branches ${branch1} and ${branch2}")
         def commit1 = executeLocal("git rev-parse ${branch1}")
         def commit2 = executeLocal("git rev-parse ${branch2}")
 
