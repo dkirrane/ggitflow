@@ -227,7 +227,7 @@ class GitflowRelease {
 
         // push it
         if(pushMerge && origin) {
-            log.info "Pushing ${tagName}"
+            log.info "Pushing tag ${tagName}"
             Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
             if(exitCodeTag){
                 def errorMsg
@@ -241,21 +241,7 @@ class GitflowRelease {
 
             def pushing = [master]
             for (branch in pushing) {
-                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
-                    log.debug "Remote branch ${branch} does not exists. Skipping push"
-                    continue;
-                }
-                log.info "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
-                if(exitCode){
-                    def errorMsg
-                    if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
-                    } else {
-                        errorMsg = "Issue pushing '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
-                    }
-                    throw new GitflowException(errorMsg)
-                }
+                push(origin, branch)
             }
         }
 
@@ -338,21 +324,7 @@ class GitflowRelease {
         if(pushMerge && origin) {
             def pushing = [develop]
             for (branch in pushing) {
-                if(!init.gitRemoteBranchExists("${origin}/${branch}")){
-                    log.debug "Remote branch ${branch} does not exists. Skipping push"
-                    continue;
-                }
-                log.info "Pushing ${branch}"
-                Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
-                if(exitCode){
-                    def errorMsg
-                    if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
-                    } else {
-                        errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
-                    }
-                    throw new GitflowException(errorMsg)
-                }
+                push(origin, branch)
             }
         }
 
@@ -398,21 +370,79 @@ class GitflowRelease {
                 log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
             } else {
                 log.info ""
-                log.warn "===> Once happy with the merge you MUST manually push '${develop}', '${master}' and tag '${tagName}' to '${origin}':"
-                log.warn ""
-                log.warn "        git push ${origin} ${develop}"
-                log.warn "        git push ${origin} ${master}"
-                log.warn "        git push ${origin} ${tagName}"
-                log.warn ""
-                if(keepRemote) {
-                    log.warn "===> And manually delete the remote Release branch '${releaseBranch}':"
+                log.warn "===> Verify merge to ${develop} & ${master} before pushing!"
+                //Prompt user to push or not
+                Scanner scanner = new Scanner(System.in);
+                System.out.print("");
+                System.out.print("Do you want to push ${develop}, ${master} and ${tagName} to ${origin}? (y/N)");
+                String answer = scanner.nextLine();
+                if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
+                    log.info "Pushing tag ${tagName}"
+                    Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
+                    if(exitCodeTag){
+                        def errorMsg
+                        if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                            errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                        } else {
+                            errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                        }
+                        throw new GitflowException(errorMsg)
+                    }
+
+                    def pushing = [master,develop]
+                    for (branch in pushing) {
+                        push(origin, branch)
+                    }
+
+                    if(keepRemote){
+                        System.out.print("Do you want to delete the remote branch: ${origin}/${releaseBranch}? (y/N)");
+                        String answer2 = scanner.nextLine();
+                        if (answer2.matches(/^([yY][eE][sS]|[yY])$/)) {
+                            //Delete remote release branch
+                            if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
+                                init.executeRemote("git push ${origin} :${releaseBranch}")
+                            }
+                        }
+                    }
+
+                } else {
+                    log.info ""
+                    log.warn "===> Once happy with the merge you MUST manually push '${develop}', '${master}' and tag '${tagName}' to '${origin}':"
                     log.warn ""
-                    log.warn "        git push ${origin} --delete ${releaseBranch}"
-                }                
-                log.info ""
+                    log.warn "        git push ${origin} ${develop}"
+                    log.warn "        git push ${origin} ${master}"
+                    log.warn "        git push ${origin} ${tagName}"
+                    log.warn ""
+                    if(keepRemote) {
+                        log.warn ""
+                        log.warn "===> And manually delete the remote Release branch '${releaseBranch}':"
+                        log.warn ""
+                        log.warn "        git push ${origin} --delete ${releaseBranch}"
+                    }
+                    log.info ""
+                }
             }
         }
         log.info ""
     }
+
+    void push(String origin, String branch) throws GitflowException {
+        if(!init.gitRemoteBranchExists("${origin}/${branch}")){
+            log.debug "Remote branch ${branch} does not exists. Skipping push"
+            return;
+        }
+        log.info "Pushing ${branch}"
+        Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
+        if(exitCode){
+            def errorMsg
+            if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+            } else {
+                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+            }
+            throw new GitflowException(errorMsg)
+        }
+    }
+
 }
 
