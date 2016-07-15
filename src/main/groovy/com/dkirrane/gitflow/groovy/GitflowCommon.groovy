@@ -334,10 +334,12 @@ class GitflowCommon {
         log.debug("Comparing branches ${branch1} and ${branch2}")
         def commit1 = executeLocal("git rev-parse ${branch1}")
         def commit2 = executeLocal("git rev-parse ${branch2}")
+        log.debug("Branch ${branch1} commit is ${commit1}")
+        log.debug("Branch ${branch2} commit is ${commit2}")
 
         if (commit1 != commit2){
             def base = executeLocal("git merge-base ${commit1} ${commit2}")
-
+            log.debug("Base is ${base}")
             if (null == base){
                 return 4
             }
@@ -404,9 +406,9 @@ class GitflowCommon {
         def hasMasterConfig = gitflowHasMasterConfigured()
         def hasDevelopConfig = gitflowHasDevelopConfigured()
         def hasPrefixesConfig = gitflowHasPrefixesConfigured()
-        
+
         log.debug("Gitflow config repoExists=${repoExists}, master=${master}, develop=${develop}, hasMasterConfig=${hasMasterConfig}, hasDevelopConfig=${hasDevelopConfig}, hasPrefixesConfig=${hasPrefixesConfig}")
-        
+
         if(repoExists &&
             hasMasterConfig &&
             hasDevelopConfig &&
@@ -486,11 +488,11 @@ class GitflowCommon {
         requireLocalBranch(branch1)
         requireRemoteBranch(branch2)
         Integer result = gitCompareBranches(branch1, branch2)
-        if(0 != result){         
+        if(0 != result){
             throw new GitflowException("ERROR: Branches '${branch1}' and '${branch2}' must be at the same commit. Aborting");
         }
     }
-    
+
     void requireLocalBranchNotBehind(String branch1, String branch2) {
         requireLocalBranch(branch1)
         requireRemoteBranch(branch2)
@@ -498,10 +500,10 @@ class GitflowCommon {
         // 0 branches are equal
         // 2 remote branch2 is behind local branch1
         // If result is not 0 or 2 then branch1 must be behind branch2
-        if([0, 2].contains(result) == false){         
+        if([0, 2].contains(result) == false){
             throw new GitflowException("ERROR: Local '${branch1}' branch must not be behind remote '${branch2}' branch. Aborting");
         }
-    }    
+    }
 
     static void main(String[] args) {
         GitflowCommon common = new GitflowCommon()
