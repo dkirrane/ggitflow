@@ -374,7 +374,7 @@ class GitflowHotfix {
                 //Prompt user to push or not
                 Scanner scanner = new Scanner(System.in);
                 System.out.println("");
-                System.out.print("Do you want to push ${develop}, ${master} and ${tagName} to ${origin}? (y/N)");
+                System.out.print("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
                 String answer = scanner.nextLine();
                 if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
                     log.info "Pushing tag ${tagName}"
