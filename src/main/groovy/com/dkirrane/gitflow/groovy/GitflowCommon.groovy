@@ -338,7 +338,7 @@ class GitflowCommon {
         log.debug("Branch ${branch2} commit is ${commit2}")
 
         if (commit1 != commit2){
-            def base = executeLocal("git merge-base ${commit1} ${commit2}")
+            def base = executeLocal("git merge-base ${commit1} ${commit2}", true)
             log.debug("Base is ${base}")
             if (null == base){
                 return 4
