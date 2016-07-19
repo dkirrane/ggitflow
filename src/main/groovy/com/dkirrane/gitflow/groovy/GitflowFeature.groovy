@@ -286,7 +286,7 @@ class GitflowFeature {
             }
         }
 
-        if (!keepLocal) {            
+        if (!keepLocal) {
             if(init.gitIsBranchMergedInto(featureBranch, develop)){
                 def curr = init.gitCurrentBranch()
                 if(featureBranch == curr){

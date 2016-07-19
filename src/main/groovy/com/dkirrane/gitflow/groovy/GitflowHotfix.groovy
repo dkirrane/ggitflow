@@ -71,7 +71,8 @@ class GitflowHotfix {
         // require_no_existing_hotfix_branches
         List<String> allBranches = init.gitAllBranches()
         if( allBranches.any({ it.contains(prefix) }) ){
-            throw new GitflowException("There is an existing hotfix branch. Finish that one first.")
+            def found = allBranches.findAll { it.contains(prefix) }
+            throw new GitflowException("There is an existing hotfix branch. Finish that one first: ${found}")
         }
 
         // require_clean_working_tree
@@ -373,8 +374,8 @@ class GitflowHotfix {
                 log.warn "===> Verify merge to ${develop} & ${master} before pushing!"
                 //Prompt user to push or not
                 Scanner scanner = new Scanner(System.in);
-                System.out.print("");    
-                System.out.print("Do you want to push ${develop}, ${master} and ${tagName} to ${origin}? (y/N)");
+                System.out.println("");
+                System.out.print("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
                 String answer = scanner.nextLine();
                 if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
                     log.info "Pushing tag ${tagName}"
