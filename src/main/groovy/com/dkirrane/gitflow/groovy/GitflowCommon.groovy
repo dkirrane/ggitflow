@@ -91,9 +91,19 @@ class GitflowCommon {
         log.debug "Exit code: " + process.exitValue()
 
         if(error.toString()) {
-            log.warn "Executing command: '${cmd}'"
-            log.warn "Exit code: " + process.exitValue()
-            log.warn error.toString()
+            if(error.toString().startsWith("Everything up-to-date")) { // This should not be an error
+                log.debug "Executing command: '${cmd}'"
+                log.debug "Exit code: " + process.exitValue()
+                log.debug "Error: " + error.toString()
+            } else if(error.toString().startsWith("To ${getOriginURL()}")) { // This should not be an error
+                log.debug "Executing command: '${cmd}'"
+                log.debug "Exit code: " + process.exitValue()
+                log.debug "Error: " + error.toString()
+            } else {
+                log.warn "Executing command: '${cmd}'"
+                log.warn "Exit code: " + process.exitValue()
+                log.warn "Error: " + error.toString()
+            }
         }
 
         return process.exitValue()
