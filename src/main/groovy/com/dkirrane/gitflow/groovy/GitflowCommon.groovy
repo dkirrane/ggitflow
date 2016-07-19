@@ -68,6 +68,7 @@ class GitflowCommon {
         } else {
             if(error.toString()) {
                 log.warn "Executing command: '${cmd}'"
+                log.warn "Exit code: " + process.exitValue()
                 log.warn error.toString()
             }
         }
@@ -90,6 +91,8 @@ class GitflowCommon {
         log.debug "Exit code: " + process.exitValue()
 
         if(error.toString()) {
+            log.warn "Executing command: '${cmd}'"
+            log.warn "Exit code: " + process.exitValue()
             log.warn error.toString()
         }
 
