@@ -455,6 +455,35 @@ class GitflowCommon {
         }
     }
 
+    void checkRemoteConnection() {
+        log.debug("Verifying we can connect to the remote Git repo")
+        def origin = getOrigin()
+        if(origin) {
+            StringBuilder standard = new StringBuilder(450000)
+            StringBuilder error = new StringBuilder(450000)
+            def process = "git fetch --all".execute(envp, repoDir)
+            process.consumeProcessOutput(standard, error)
+            process.waitFor()
+
+            String stOut = standard.toString()
+            String stErr = error.toString()
+            Integer exitCode = process.exitValue()
+            
+            if(exitCode != 0 || stErr) {
+                println("")
+                log.info stOut
+                log.error  "Cannot connect to remote Git repo '${origin}' ${getOriginURL()}. Check your Git credentials."
+                log.error  stErr.trim()
+                log.error "(exit code ${exitCode})"
+                println("")
+            }
+
+            if(exitCode != 0) {
+                throw new GitflowException("Cannot connect to remote Git repo '${origin}'. Check your Git credentials.")
+            }
+        }
+    }
+
     void requireGitflowInitialized() {
     }
 
