@@ -5,7 +5,7 @@ apply plugin: 'application'
 //apply plugin: 'maven-publish'
 
 group = 'com.dkirrane.groovy.gitflow'
-version = '2.5'
+version = '2.6'
 
 mainClassName = "com.dkirrane.gitflow.groovy.conflicts.Main"
 
