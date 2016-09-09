@@ -269,6 +269,16 @@ class GitflowCommon {
         return localHotfixBranches.findAll({ it.startsWith(prefix) })
     }
 
+    List gitLocalSupportBranches() {
+        List localSupportBranches = new ArrayList()
+
+        def process = "git branch --no-color".execute(envp, repoDir)
+        process.in.eachLine { line -> localSupportBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+
+        String prefix = getSupportBranchPrefix()
+        return localSupportBranches.findAll({ it.startsWith(prefix) })
+    }
+
     Boolean gitIsCleanWorkingTree() {
         // Check for unstaged changes in the working tree (exit code is 0 if clean)
         Process wcProcess = "git diff --no-ext-diff --ignore-submodules --quiet --exit-code".execute(envp, repoDir)
@@ -468,13 +478,14 @@ class GitflowCommon {
             String stOut = standard.toString()
             String stErr = error.toString()
             Integer exitCode = process.exitValue()
-            
+
             if(exitCode != 0 || stErr) {
                 println("")
                 log.info stOut
-                log.error  "Cannot connect to remote Git repo '${origin}' ${getOriginURL()}. Check your Git credentials."
-                log.error  stErr.trim()
-                log.error "(exit code ${exitCode})"
+                log.error "Issue occurred when connecting to remote Git repo '${origin}' ${getOriginURL()}"
+                log.error "Check your Git credentials and review Git error below:"
+                log.error "Git exit code: ${exitCode}"
+                log.error stErr.trim()
                 println("")
             }
 
