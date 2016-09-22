@@ -233,7 +233,7 @@ class GitflowInit extends GitflowCommon {
         }
 
         def result = super.executeLocal("git config --get-regexp gitflow.*")
-        log.info "Completed Gitflow initialisation\n\n${result}\n"
+        log.debug "Completed Gitflow initialisation\n\n${result}\n"
     }
 }
 
