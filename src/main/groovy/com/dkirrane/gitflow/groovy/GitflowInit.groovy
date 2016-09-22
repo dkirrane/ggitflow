@@ -223,8 +223,12 @@ class GitflowInit extends GitflowCommon {
             if(versionTagPref?.trim()) {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
-                def emptyString = ""
-                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${emptyString}"])
+                // Windows needs to doucle quotes. Linux does not
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "\"\""])
+                } else {
+                    super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ""])
+                }
             }
         }
 

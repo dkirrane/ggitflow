@@ -196,8 +196,8 @@ class GitflowCommon {
     }
 
     List gitLocalBranches() {
-        /* Fetch any new tags and prune any branches that may already be deleted */
-        executeRemote("git fetch --tags --prune");
+//        /* Fetch any new tags and prune any branches that may already be deleted */
+//        executeRemote("git fetch --tags --prune");
 
         def localBranches = []
 
@@ -208,8 +208,8 @@ class GitflowCommon {
     }
 
     List gitRemoteBranches() {
-        /* Fetch any new tags and prune any branches that may already be deleted */
-        executeRemote("git remote update --prune ${getOrigin()}");
+//        /* Fetch any new tags and prune any branches that may already be deleted */
+//        executeRemote("git remote update --prune ${getOrigin()}");
 
         // git branch -r --no-color
         def remoteBranches = []
@@ -246,7 +246,7 @@ class GitflowCommon {
 
     List gitRemoteFeatureBranches() {
         String prefix = getFeatureBranchPrefix()
-        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalFeatureBranches() {
@@ -256,32 +256,32 @@ class GitflowCommon {
 
     List gitRemoteReleaseBranches() {
         String prefix = getReleaseBranchPrefix()
-        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalReleaseBranches() {
         String prefix = getReleaseBranchPrefix()
-        return gitLocalBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitRemoteHotfixBranches() {
         String prefix = getHotfixBranchPrefix()
-        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalHotfixBranches() {
         String prefix = getHotfixBranchPrefix()
-        return gitLocalBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitRemoteSupportBranches() {
         String prefix = getSupportBranchPrefix()
-        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalSupportBranches() {
         String prefix = getSupportBranchPrefix()
-        return gitLocalBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitRemoteTags() {
