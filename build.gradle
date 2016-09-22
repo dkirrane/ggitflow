@@ -5,7 +5,7 @@ apply plugin: 'application'
 //apply plugin: 'maven-publish'
 
 group = 'com.dkirrane.groovy.gitflow'
-version = '2.7-SNAPSHOT'
+version = '3.0-SNAPSHOT'
 
 mainClassName = "com.dkirrane.gitflow.groovy.conflicts.Main"
 
@@ -17,8 +17,8 @@ ext {
     scmUrl = 'scm:git:https://github.com/dkirrane/ggitflow.git'
 }
 
-sourceCompatibility = 1.5
-targetCompatibility = 1.5
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 task wrapper(type: Wrapper) {
     gradleVersion = '1.10'
