@@ -197,6 +197,9 @@ class GitflowCommon {
     }
 
     List gitLocalBranches() {
+        /* Fetch any new tags and prune any branches that may already be deleted */
+        executeRemote("git fetch --tags --prune");
+
         def localBranches = []
 
         def process = "git branch --no-color".execute(envp, repoDir)
@@ -206,6 +209,9 @@ class GitflowCommon {
     }
 
     List gitRemoteBranches() {
+        /* Fetch any new tags and prune any branches that may already be deleted */
+        executeRemote("git fetch --tags --prune");
+
         // git branch -r --no-color
         def remoteBranches = []
 
@@ -239,44 +245,70 @@ class GitflowCommon {
         return matcher[0].replaceAll("^(\\*\\s+|\\s+)", "")
     }
 
-    List gitLocalFeatureBranches() {
-        List localFeatureBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localFeatureBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
+    List gitRemoteFeatureBranches() {
         String prefix = getFeatureBranchPrefix()
-        return localFeatureBranches.findAll({ it.startsWith(prefix) })
+        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
+    }
+
+    List gitLocalFeatureBranches() {
+        String prefix = getFeatureBranchPrefix()
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteReleaseBranches() {
+        String prefix = getReleaseBranchPrefix()
+        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalReleaseBranches() {
-        List localReleaseBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localReleaseBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
         String prefix = getReleaseBranchPrefix()
-        return localReleaseBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches.findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteHotfixBranches() {
+        String prefix = getHotfixBranchPrefix()
+        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalHotfixBranches() {
-        List localHotfixBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localHotfixBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
         String prefix = getHotfixBranchPrefix()
-        return localHotfixBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches.findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteSupportBranches() {
+        String prefix = getSupportBranchPrefix()
+        return gitRemoteBranches.findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalSupportBranches() {
-        List localSupportBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localSupportBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
         String prefix = getSupportBranchPrefix()
-        return localSupportBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches.findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteTags() {
+        /* Fetch any new tags and prune any branches that may already be deleted */
+        executeRemote("git fetch --tags --prune");
+
+        // git tag
+        def remoteTags = []
+
+        def process = "git ls-remote --tags --refs --quiet".execute(envp, repoDir)
+        process.in.eachLine { line -> remoteTags.add(line.replaceAll("^.*refs/tags/", "")) }
+
+        return remoteTags;
+    }
+
+    List gitLocalTags() {
+        /* Fetch any new tags and prune any branches that may already be deleted */
+        executeRemote("git fetch --tags --prune");
+
+        // git tag
+        def localTags = []
+
+        def process = "git tag --sort=taggerdate".execute(envp, repoDir)
+        process.in.eachLine { line -> localTags.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+
+        return localTags.reverse(); // reverse here so latest tag is at index 0
     }
 
     Boolean gitIsCleanWorkingTree() {
