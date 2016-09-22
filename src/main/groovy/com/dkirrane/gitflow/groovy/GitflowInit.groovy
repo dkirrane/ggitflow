@@ -64,9 +64,11 @@ class GitflowInit extends GitflowCommon {
         log.info "\t Version tag prefix '${versionTagPref}'"
 
         def origin = super.getOrigin()
-        log.info "\t Origin = '${origin}'"
+        def originUrl = super.getOriginURL()
+        log.info "\t Origin = '${origin}' ${originUrl}"
 
         // add a master branch if no such branch exists yet
+        log.debug "Setting git config gitflow.branch.master"
         def masterBranch = super.getMasterBranch()
         if( masterBranch?.trim() ) {
             log.debug "master branch '${masterBranch}' already configured."
@@ -82,8 +84,7 @@ class GitflowInit extends GitflowCommon {
                 super.executeLocal("git config gitflow.branch.master ${masterBrnName}")
             } else {
                 log.error ""
-                log.error "Gitflow is not configured but branches exist:"
-                log.error super.gitAllBranches()
+                log.error "Gitflow is not configured but branches exist: ${super.gitAllBranches()}"
 
                 log.error "Run this command to set the branch used for bringing forth production releases:"
                 log.error "git config gitflow.branch.master <branch_name>"
@@ -92,6 +93,7 @@ class GitflowInit extends GitflowCommon {
         }
 
         // add a develop branch if no such branch exists yet
+        log.debug "Setting git config gitflow.branch.develop"
         def developBranch = super.getDevelopBranch()
         if( developBranch?.trim() ) {
             log.debug "develop branch '${developBranch}' already configured."
@@ -107,12 +109,11 @@ class GitflowInit extends GitflowCommon {
                 super.executeLocal("git config gitflow.branch.develop ${developBrnName}")
             } else {
                 log.error ""
-                log.error "Gitflow is not configured but branches exist:"
-                log.error super.gitAllBranches()
+                log.error "Gitflow is not configured but branches exist: ${super.gitAllBranches()}"
 
                 log.error  "Run this command to set the branch used for development of the next release:"
                 log.error  "git config gitflow.branch.develop <branch_name>"
-                throw new GitflowException("You need to configure the develop branch 'git config gitflow.branch.develop <branch_name>'")
+                throw new GitflowException("You need to configure the develop branch prefix 'git config gitflow.branch.develop <branch_name>'")
             }
         }
 
@@ -222,12 +223,12 @@ class GitflowInit extends GitflowCommon {
             if(versionTagPref?.trim()) {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
-                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "\"\""])
-            }            
+                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ''])
+            }
         }
 
         log.debug "Completed Gitflow initialisation"
-        super.executeLocal("git config --get-regexp gitflow.*")       
+        super.executeLocal("git config --get-regexp gitflow.*")
     }
 }
 

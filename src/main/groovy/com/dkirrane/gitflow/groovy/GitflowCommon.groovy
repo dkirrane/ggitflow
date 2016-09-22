@@ -121,7 +121,6 @@ class GitflowCommon {
     }
 
     String getGitflowPrefixes(configName) {
-        log.debug "getGitflowPrefixes"
         String configValue;
         if(prefixes?.isEmpty() || !prefixes.containsKey(configName)) {
             def key
@@ -210,13 +209,13 @@ class GitflowCommon {
 
     List gitRemoteBranches() {
         /* Fetch any new tags and prune any branches that may already be deleted */
-        executeRemote("git fetch --tags --prune");
+        executeRemote("git remote update --prune ${getOrigin()}");
 
         // git branch -r --no-color
         def remoteBranches = []
 
-        def process = "git branch -r --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> remoteBranches.add(line.replaceAll("^(\\s+)", "")) }
+        def process = "git ls-remote --heads --refs ${getOriginURL()}".execute(envp, repoDir)
+        process.in.eachLine { line -> remoteBranches.add(line.replaceAll("^.*refs/heads/", "${origin}/")) }
 
         return remoteBranches;
     }
