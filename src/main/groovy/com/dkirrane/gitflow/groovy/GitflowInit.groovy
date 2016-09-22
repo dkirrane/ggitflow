@@ -71,7 +71,7 @@ class GitflowInit extends GitflowCommon {
         log.debug "Setting git config gitflow.branch.master"
         def masterBranch = super.getMasterBranch()
         if( masterBranch?.trim() ) {
-            log.debug "master branch '${masterBranch}' already configured."
+            log.info "git config gitflow.branch.master '${masterBranch}' already configured."
         } else {
             if(super.gitAllBranches().size() == 0){
                 log.debug "No branches exist yet. Master branch must be created now."
@@ -96,7 +96,7 @@ class GitflowInit extends GitflowCommon {
         log.debug "Setting git config gitflow.branch.develop"
         def developBranch = super.getDevelopBranch()
         if( developBranch?.trim() ) {
-            log.debug "develop branch '${developBranch}' already configured."
+            log.info "git config gitflow.branch.develop '${developBranch}' already configured."
         } else {
             if(super.gitAllBranches().minus(["${masterBrnName}","${origin}/${masterBrnName}"]).size() == 0){
                 log.debug "No branches exist yet. Base branches must be created now."
@@ -186,7 +186,7 @@ class GitflowInit extends GitflowCommon {
         // Feature branches
         def feature = super.getFeatureBranchPrefix()
         if(feature?.trim()) {
-            log.debug feature
+            log.info "git config gitflow.branch.feature '${feature}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.feature ${featureBrnPref}")
         }
@@ -194,7 +194,7 @@ class GitflowInit extends GitflowCommon {
         // Release branches
         def release = super.getReleaseBranchPrefix()
         if(release?.trim()) {
-            log.debug release
+            log.info "git config gitflow.branch.release '${release}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.release ${releaseBrnPref}")
         }
@@ -202,7 +202,7 @@ class GitflowInit extends GitflowCommon {
         // Hotfix branches
         def hotfix = super.getHotfixBranchPrefix()
         if(hotfix?.trim()) {
-            log.debug hotfix
+            log.info "git config gitflow.branch.hotfix '${hotfix}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.hotfix ${hotfixBrnPref}")
         }
@@ -210,7 +210,7 @@ class GitflowInit extends GitflowCommon {
         // Support branches
         def support = super.getSupportBranchPrefix()
         if(support?.trim()) {
-            log.debug support
+            log.info "git config gitflow.branch.support '${support}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.support ${supportBrnPref}")
         }
@@ -218,17 +218,17 @@ class GitflowInit extends GitflowCommon {
         // Version tag prefix
         def versiontag = super.getVersionTagPrefix()
         if(versiontag?.trim()) {
-            log.debug versiontag
+            log.info "git config gitflow.branch.versiontag '${versiontag}' already configured."
         } else {
             if(versionTagPref?.trim()) {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
-                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ''])
+                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "\"\""])
             }
         }
 
-        log.debug "Completed Gitflow initialisation"
-        super.executeLocal("git config --get-regexp gitflow.*")
+        def result = super.executeLocal("git config --get-regexp gitflow.*")
+        log.info "Completed Gitflow initialisation\n\n${result}\n"
     }
 }
 
