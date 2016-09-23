@@ -18,6 +18,7 @@ package com.dkirrane.gitflow.groovy.prompt
 
 import static org.fusesource.jansi.Ansi.Color.GREEN
 import static org.fusesource.jansi.Ansi.ansi
+import java.util.Scanner
 
 /**
  *
