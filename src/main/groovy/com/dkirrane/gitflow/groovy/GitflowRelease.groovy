@@ -18,6 +18,7 @@ package com.dkirrane.gitflow.groovy
 
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
+import com.dkirrane.gitflow.groovy.prompt.Prompter
 import groovy.util.logging.Slf4j
 
 /**
@@ -128,7 +129,7 @@ class GitflowRelease {
         log.info "- Start committing last-minute fixes in preparing your release"
         log.info "- When done, run:"
         log.info ""
-        log.info "     mvn ggitflow:release-finish"
+        log.info "     mvn gitflow:release-finish"
         log.info ""
 
     }
@@ -165,7 +166,7 @@ class GitflowRelease {
         // sanity checks
         init.requireLocalBranch(releaseBranch)
         init.requireCleanWorkingTree()
-        init.requireTagAbsent(tagName)
+        //        init.requireTagAbsent(tagName)
 
         def origin = init.getOrigin()
         def develop = init.getDevelopBranch()
@@ -191,6 +192,15 @@ class GitflowRelease {
             }
             if(init.gitRemoteBranchExists("${origin}/${master}")){
                 init.requireBranchesEqual(master, "${origin}/${master}")
+            }
+        }
+
+	// We ask for a tag, be sure it does not exists or
+        // points to the latest hotfix commit
+        if(init.gitTagExists(tagName)){
+            Integer result = init.gitCompareBranches(releaseBranch, master);
+            if(0 != result){
+                throw new GitflowException("Tag already exists and does not point to release branch '${releaseBranch}'");
             }
         }
 
@@ -373,10 +383,7 @@ class GitflowRelease {
                 log.info ""
                 log.warn "===> Verify merge to ${develop} & ${master} before pushing!"
                 //Prompt user to push or not
-                Scanner scanner = new Scanner(System.in);
-                System.out.println("");
-                System.out.print("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
-                String answer = scanner.nextLine();
+                String answer = Prompter.instance.prompt("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
                 if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
                     log.info "Pushing tag ${tagName}"
                     Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")

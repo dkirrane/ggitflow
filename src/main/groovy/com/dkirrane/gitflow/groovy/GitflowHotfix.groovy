@@ -18,6 +18,7 @@ package com.dkirrane.gitflow.groovy
 
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
+import com.dkirrane.gitflow.groovy.prompt.Prompter
 import groovy.util.logging.Slf4j
 
 /**
@@ -165,7 +166,7 @@ class GitflowHotfix {
         // sanity checks
         init.requireLocalBranch(hotfixBranch)
         init.requireCleanWorkingTree()
-        init.requireTagAbsent(tagName)
+        //        init.requireTagAbsent(tagName)
 
         def origin = init.getOrigin()
         def develop = init.getDevelopBranch()
@@ -194,6 +195,35 @@ class GitflowHotfix {
             }
         }
 
+        // If the branch is already merged there is no need to check the hotfix branch
+	// This can happen when the merge in develop fails and we rerun the finish.
+        if(!init.gitIsBranchMergedInto(hotfixBranch, master)){
+            // Check if the hotfix branch:
+	    // - has commits: No reason to finish a hotfix without commits
+            // - Is ahead of the BASE: If it's not a good idea to merge
+            // - Can be merged: If there's no common ancestor we can't merge the hotfix
+            Integer result = init.gitCompareBranches(hotfixBranch, master);
+            switch (result) {
+            case 0:
+                throw new GitflowException("You need some commits in the hotfix branch '${hotfixBranch}'");
+            case 1:
+                throw new GitflowException("The hotfix branch '${hotfixBranch}' is not ahead of branch '${master}'");
+            case 4:
+                throw new GitflowException("The hotfix branch '${hotfixBranch}' has no common ancestor with branch '${master}'");
+            default:
+                log.debug "Compared Branches ${result}"
+            }
+        }
+
+	// We ask for a tag, be sure it does not exists or
+        // points to the latest hotfix commit
+        if(init.gitTagExists(tagName)){
+            Integer result = init.gitCompareBranches(hotfixBranch, master);
+            if(0 != result){
+                throw new GitflowException("Tag already exists and does not point to hotfix branch '${hotfixBranch}'");
+            }
+        }
+
         // try to merge into master
         // in case a previous attempt to finish this release branch has failed,
         // but the merge into master was successful, we skip it now
@@ -213,6 +243,9 @@ class GitflowHotfix {
             }
         }
 
+        // Try to tag the release.
+        // In case a previous attempt to finish this release branch has failed,
+        // but the tag was set successful, we skip it now
         if(!init.gitTagExists(tagName)){
             log.info "Tagging hotfix branch ${hotfixBranch} on ${master}"
             def tagMsg = "Hotfix version ${tagName}"
@@ -373,10 +406,7 @@ class GitflowHotfix {
                 log.info ""
                 log.warn "===> Verify merge to ${develop} & ${master} before pushing!"
                 //Prompt user to push or not
-                Scanner scanner = new Scanner(System.in);
-                System.out.println("");
-                System.out.print("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
-                String answer = scanner.nextLine();
+                String answer = Prompter.instance.prompt("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
                 if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
                     log.info "Pushing tag ${tagName}"
                     Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
