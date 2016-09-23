@@ -405,7 +405,7 @@ class GitflowHotfix {
                 log.info ""
                 log.warn "===> Verify merge to ${develop} & ${master} before pushing!"
                 //Prompt user to push or not
-                String answer = Prompter.instance.prompt("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
+                String answer = Prompter.instance.prompt("Do you want to push ${develop}, ${master}, tag ${tagName} to ${origin} and delete the remote branch: ${origin}/${hotfixBranch} ? (y/N)");
                 if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
                     log.info "Pushing tag ${tagName}"
                     Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
@@ -425,9 +425,7 @@ class GitflowHotfix {
                     }
 
                     if(keepRemote){
-                        System.out.print("Do you want to delete the remote branch: ${origin}/${hotfixBranch}? (y/N)");
-                        String answer2 = scanner.nextLine();
-                        if (answer2.matches(/^([yY][eE][sS]|[yY])$/)) {
+                        if (answer.matches(/^([yY][eE][sS]|[yY])$/)) {
                             //Delete remote hotfix branch
                             if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
                                 init.executeRemote("git push ${origin} :${hotfixBranch}")
