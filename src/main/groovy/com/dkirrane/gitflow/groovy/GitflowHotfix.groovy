@@ -129,7 +129,7 @@ class GitflowHotfix {
         log.info "- Start committing your bug fixes"
         log.info "- When done, run:"
         log.info ""
-        log.info "     mvn ggitflow:hotfix-finish"
+        log.info "     mvn gitflow:hotfix-finish"
         log.info ""
 
     }

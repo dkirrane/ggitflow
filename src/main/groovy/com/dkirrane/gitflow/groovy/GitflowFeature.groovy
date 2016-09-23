@@ -118,7 +118,7 @@ class GitflowFeature {
         log.info ""
         log.info "Now, start committing on your feature. When done, use:"
         log.info ""
-        log.info "     mvn ggitflow:feature-finish"
+        log.info "     mvn gitflow:feature-finish"
         log.info ""
     }
 
@@ -264,7 +264,7 @@ class GitflowFeature {
             log.warn "WARN: Finish was aborted due to conflicts during rebase."
             log.warn "WARN: Please finish the rebase manually now."
             log.warn "WARN: When finished, re-run:"
-            log.warn "WARN: mvn ggitflow:feature-finish"
+            log.warn "WARN: mvn gitflow:feature-finish"
             throw new GitflowException("Rebase feature onto develop has conflicts")
         } else {
             log.debug "Rebase complete"
