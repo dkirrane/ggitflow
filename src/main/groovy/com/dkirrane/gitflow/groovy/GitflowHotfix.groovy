@@ -185,13 +185,17 @@ class GitflowHotfix {
             }
 
             if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
-                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
+                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local hotfix branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
             if(init.gitRemoteBranchExists("${origin}/${master}")){
-                init.requireBranchesEqual(master, "${origin}/${master}")
+                if(init.gitIsBranchMergedInto(hotfixBranch, master)){
+                    init.requireLocalBranchNotBehind(master, "${origin}/${master}") // local hotfix branch may have already been merged to local master i.e. re-running finish after merge conflict
+                } else {
+                    init.requireBranchesEqual(master, "${origin}/${master}")
+                }
             }
         }
 
@@ -205,22 +209,13 @@ class GitflowHotfix {
             Integer result = init.gitCompareBranches(hotfixBranch, master);
             switch (result) {
             case 0:
-                throw new GitflowException("You need some commits in the hotfix branch '${hotfixBranch}'");
+                throw new GitflowException("You need some commits in the hotfix branch '${hotfixBranch}'. No reason to finish a hotfix without commits!!!");
             case 1:
-                throw new GitflowException("The hotfix branch '${hotfixBranch}' is not ahead of branch '${master}'");
+                throw new GitflowException("The hotfix branch '${hotfixBranch}' is not ahead of branch '${master}'. It's not a good idea to merge!!!");
             case 4:
-                throw new GitflowException("The hotfix branch '${hotfixBranch}' has no common ancestor with branch '${master}'");
+                throw new GitflowException("The hotfix branch '${hotfixBranch}' has no common ancestor with branch '${master}'. Cannot merge this hotfix branch!!!");
             default:
                 log.debug "Compared Branches ${result}"
-            }
-        }
-
-	// We ask for a tag, be sure it does not exists or
-        // points to the latest hotfix commit
-        if(init.gitTagExists(tagName)){
-            Integer result = init.gitCompareBranches(hotfixBranch, master);
-            if(0 != result){
-                throw new GitflowException("Tag already exists and does not point to hotfix branch '${hotfixBranch}'");
             }
         }
 
@@ -229,6 +224,10 @@ class GitflowHotfix {
         // but the merge into master was successful, we skip it now
         if(!init.gitIsBranchMergedInto(hotfixBranch, master)){
             log.info "Merging hotfix branch ${hotfixBranch} into ${master}"
+
+            // Before we merge be sure the tag does not exist
+            init.requireTagAbsent(tagName)
+
             init.executeLocal("git checkout ${master}")
 
             def msg = "${msgPrefix}Merge branch '${hotfixBranch}' into ${master}${msgSuffix}"

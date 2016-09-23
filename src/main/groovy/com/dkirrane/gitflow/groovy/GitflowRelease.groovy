@@ -185,22 +185,17 @@ class GitflowRelease {
             }
 
             if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
-                init.requireLocalBranchNotBehind(releaseBranch, "${origin}/${releaseBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
+                init.requireLocalBranchNotBehind(releaseBranch, "${origin}/${releaseBranch}") // local release branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
             if(init.gitRemoteBranchExists("${origin}/${master}")){
-                init.requireBranchesEqual(master, "${origin}/${master}")
-            }
-        }
-
-	// We ask for a tag, be sure it does not exists or
-        // points to the latest hotfix commit
-        if(init.gitTagExists(tagName)){
-            Integer result = init.gitCompareBranches(releaseBranch, master);
-            if(0 != result){
-                throw new GitflowException("Tag already exists and does not point to release branch '${releaseBranch}'");
+                if(init.gitIsBranchMergedInto(releaseBranch, master)){
+                    init.requireLocalBranchNotBehind(master, "${origin}/${master}") // local release branch may have already been merged to local master i.e. re-running finish after merge conflict
+                } else {
+                    init.requireBranchesEqual(master, "${origin}/${master}")
+                }
             }
         }
 
@@ -209,6 +204,10 @@ class GitflowRelease {
         // but the merge into master was successful, we skip it now
         if(!init.gitIsBranchMergedInto(releaseBranch, master)){
             log.info "Merging release branch ${releaseBranch} into ${master}"
+
+            // Befor we merge be sure the tag does not exist
+            init.requireTagAbsent(tagName)
+
             init.executeLocal("git checkout ${master}")
 
             def msg = "${msgPrefix}Merge branch '${releaseBranch}' into ${master}${msgSuffix}"
@@ -223,6 +222,9 @@ class GitflowRelease {
             }
         }
 
+        // Try to tag the release.
+        // In case a previous attempt to finish this release branch has failed,
+        // but the tag was set successful, we skip it now
         if(!init.gitTagExists(tagName)){
             log.info "Tagging release branch ${releaseBranch} on ${master}"
             def tagMsg = "Release version ${tagName}"
