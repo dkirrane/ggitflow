@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014 Desmond Kirrane
  *
  * This program is free software: you can redistribute it and/or modify
@@ -20,7 +20,15 @@ package com.dkirrane.gitflow.groovy.ex
  *
  */
 class GitflowMergeConflictException extends Exception {
+
+    List<File> conflictedFiles
+
     GitflowMergeConflictException(String msg){
         super(msg)
+    }
+
+    GitflowMergeConflictException(String msg, List<File> conflictedFiles){
+        super(msg)
+        this.conflictedFiles = conflictedFiles
     }
 }

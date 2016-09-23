@@ -60,7 +60,8 @@ class GitflowCommon {
                 log.error "ERROR: executing command: '${cmd}'"
                 log.error error.toString()
                 if(standard.toString().contains("Merge conflict")){
-                    throw new GitflowMergeConflictException(standard.toString())
+                    List<File> conflictedFiles = gitMergeConflicts()
+                    throw new GitflowMergeConflictException(standard.toString(), conflictedFiles)
                 } else{
                     throw new GitflowException(error.toString())
                 }
