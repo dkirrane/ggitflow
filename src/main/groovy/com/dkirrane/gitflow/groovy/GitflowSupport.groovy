@@ -16,6 +16,7 @@
  */
 package com.dkirrane.gitflow.groovy
 
+import static com.dkirrane.gitflow.groovy.Constants.*
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import groovy.util.logging.Slf4j
 
@@ -77,9 +78,9 @@ class GitflowSupport {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your  %USERPROFILE%\\_netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -102,9 +103,9 @@ class GitflowSupport {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                    errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue pushing feature branch '${supportBranch}' to '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }

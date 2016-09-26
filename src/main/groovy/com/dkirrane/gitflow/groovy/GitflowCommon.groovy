@@ -20,6 +20,7 @@ import groovy.io.FileType
 import groovy.util.logging.Slf4j
 
 import com.dkirrane.gitflow.groovy.ex.GitflowException
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 
 /**
@@ -52,18 +53,20 @@ class GitflowCommon {
         def process = cmd.execute(envp, repoDir)
         process.consumeProcessOutput(standard, error)
         process.waitFor()
+        def exitCode = process.exitValue()
 
         log.debug standard.toString()
-        log.debug "Exit code: " + process.exitValue()
+        log.debug "Exit code: " + exitCode
         if(!ignoreExitCode){
-            if (process.exitValue() != 0){
-                log.error "ERROR: executing command: '${cmd}'"
-                log.error error.toString()
-                if(standard.toString().contains("Merge conflict")){
+            if (exitCode != 0){
+                def msg = "Error executing command: '${cmd}'"
+                def stout = standard.toString()
+                def sterr = error.toString()
+                if(stout.contains("Merge conflict") || stout.contains("CONFLICT")){
                     List<File> conflictedFiles = gitMergeConflicts()
                     throw new GitflowMergeConflictException(standard.toString(), conflictedFiles)
                 } else{
-                    throw new GitflowException(error.toString())
+                    throw new GitCommandException(msg, exitCode, standard.toString(), error.toString())
                 }
             }
         } else {
@@ -197,8 +200,8 @@ class GitflowCommon {
     }
 
     List gitLocalBranches() {
-//        /* Fetch any new tags and prune any branches that may already be deleted */
-//        executeRemote("git fetch --tags --prune");
+        //        /* Fetch any new tags and prune any branches that may already be deleted */
+        //        executeRemote("git fetch --tags --prune");
 
         def localBranches = []
 
@@ -209,8 +212,8 @@ class GitflowCommon {
     }
 
     List gitRemoteBranches() {
-//        /* Fetch any new tags and prune any branches that may already be deleted */
-//        executeRemote("git remote update --prune ${getOrigin()}");
+        //        /* Fetch any new tags and prune any branches that may already be deleted */
+        //        executeRemote("git remote update --prune ${getOrigin()}");
 
         // git branch -r --no-color
         def remoteBranches = []
@@ -312,6 +315,15 @@ class GitflowCommon {
     }
 
     Boolean gitIsCleanWorkingTree() {
+        Process headProcess = "git rev-parse --verify HEAD".execute(envp, repoDir)
+        def headCode =  headProcess.waitFor();
+        log.debug "Verify HEAD code: " + headCode;
+
+        // Check if any conflicts
+        Process uiProcess = "git update-index -q --ignore-submodules --refresh".execute(envp, repoDir)
+        def uiCode =  uiProcess.waitFor();
+        log.debug "Update index code: " + uiCode;
+
         // Check for unstaged changes in the working tree (exit code is 0 if clean)
         Process wcProcess = "git diff --no-ext-diff --ignore-submodules --quiet --exit-code".execute(envp, repoDir)
         def wcCode =  wcProcess.waitFor();
@@ -323,7 +335,11 @@ class GitflowCommon {
         log.debug "Stage code: " + idxCode;
 
         boolean clean = false;
-        if(0 != wcCode){
+        if(0 != headCode){
+            clean = false
+        } else if(0 != uiCode){
+            clean = false
+        } else if(0 != wcCode){
             clean = false
         } else if(0!=idxCode){
             clean = false
