@@ -17,6 +17,7 @@
 package com.dkirrane.gitflow.groovy
 
 import static com.dkirrane.gitflow.groovy.Constants.*
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import groovy.util.logging.Slf4j
 
@@ -33,7 +34,7 @@ class GitflowSupport {
     def msgSuffix
     def push
 
-    void start(String supportBranchName) throws GitflowException {
+    void start(String supportBranchName) throws GitCommandException, GitflowException {
         init.requireGitRepo()
 
         if(!supportBranchName) {

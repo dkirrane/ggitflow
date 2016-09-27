@@ -200,9 +200,6 @@ class GitflowCommon {
     }
 
     List gitLocalBranches() {
-        //        /* Fetch any new tags and prune any branches that may already be deleted */
-        //        executeRemote("git fetch --tags --prune");
-
         def localBranches = []
 
         def process = "git branch --no-color".execute(envp, repoDir)
@@ -212,12 +209,9 @@ class GitflowCommon {
     }
 
     List gitRemoteBranches() {
-        //        /* Fetch any new tags and prune any branches that may already be deleted */
-        //        executeRemote("git remote update --prune ${getOrigin()}");
-
-        // git branch -r --no-color
         def remoteBranches = []
 
+        // git branch -r --no-color
         def process = "git ls-remote --heads --refs ${getOriginURL()}".execute(envp, repoDir)
         process.in.eachLine { line -> remoteBranches.add(line.replaceAll("^.*refs/heads/", "${origin}/")) }
 
@@ -289,9 +283,6 @@ class GitflowCommon {
     }
 
     List gitRemoteTags() {
-        /* Fetch any new tags and prune any branches that may already be deleted */
-        executeRemote("git fetch --tags --prune");
-
         // git tag
         def remoteTags = []
 
@@ -302,9 +293,6 @@ class GitflowCommon {
     }
 
     List gitLocalTags() {
-        /* Fetch any new tags and prune any branches that may already be deleted */
-        executeRemote("git fetch --tags --prune");
-
         // git tag
         def localTags = []
 
@@ -519,6 +507,9 @@ class GitflowCommon {
         if(origin) {
             StringBuilder standard = new StringBuilder(450000)
             StringBuilder error = new StringBuilder(450000)
+            // @todo No way currently to check if the user has Git Hook 'access-control' privledges to the Git repo.
+            // This wil test connection but also update remotes and tags
+            // Fetch any new tags and prune any branches that may already be deleted
             def process = "git fetch --all --tags --prune".execute(envp, repoDir)
             process.consumeProcessOutput(standard, error)
             process.waitFor()
