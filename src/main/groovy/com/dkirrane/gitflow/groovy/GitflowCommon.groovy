@@ -519,7 +519,7 @@ class GitflowCommon {
         if(origin) {
             StringBuilder standard = new StringBuilder(450000)
             StringBuilder error = new StringBuilder(450000)
-            def process = "git fetch --all".execute(envp, repoDir)
+            def process = "git fetch --all --tags --prune".execute(envp, repoDir)
             process.consumeProcessOutput(standard, error)
             process.waitFor()
 
@@ -527,18 +527,14 @@ class GitflowCommon {
             String stErr = error.toString()
             Integer exitCode = process.exitValue()
 
-            if(exitCode != 0 || stErr) {
-                println("")
-                log.info stOut
-                log.error "Issue occurred when connecting to remote Git repo '${origin}' ${getOriginURL()}"
-                log.error "Check your Git credentials and review Git error below:"
-                log.error "Git exit code: ${exitCode}"
-                log.error stErr.trim()
-                println("")
-            }
-
             if(exitCode != 0) {
-                throw new GitflowException("Cannot connect to remote Git repo '${origin}'. Check your Git credentials.")
+                def msg;
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    msg = "Issue occurred when connecting to remote Git repo '${origin}' '${getOriginURL()}'. ${PUSH_ISSUE_WIN}";
+                } else {
+                    msg = "Issue occurred when connecting to remote Git repo '${origin}' '${getOriginURL()}'. ${PUSH_ISSUE_LIN}"
+                }
+                throw new GitCommandException(msg, exitCode, stOut.toString(), stErr.toString())
             }
         }
     }

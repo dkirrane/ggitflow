@@ -355,7 +355,7 @@ class GitflowRelease {
             log.info "Deleting ${releaseBranch}"
             init.executeLocal("git branch -D ${releaseBranch}")
 
-            //Delete remote release branch
+            // Delete remote release branch
             if(init.gitRemoteBranchExists("${origin}/${releaseBranch}")){
                 log.info "Deleting ${origin}/${releaseBranch}"
                 init.executeRemote("git push --delete ${origin} ${releaseBranch}")

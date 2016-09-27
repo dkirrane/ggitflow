@@ -26,6 +26,6 @@ public class Constants {
     public static final String DEFAULT_SUPPORT_BRN_PREFIX = "support/";
     public static final String DEFAULT_VERSION_TAG_PREFIX = "";
 
-    public static final String PUSH_ISSUE_WIN = "Check your username/password (~/_netrc) and any repository Git hooks";
-    public static final String PUSH_ISSUE_LIN = "Check your username/password (~/.netrc) and any repository Git hooks";
+    public static final String PUSH_ISSUE_WIN = "Check your Git credentials (~/_netrc or git-credential-store) and any repository Git hooks";
+    public static final String PUSH_ISSUE_LIN = "Check your Git credentials (~/.netrc or git-credential-store) and any repository Git hooks";
 }
