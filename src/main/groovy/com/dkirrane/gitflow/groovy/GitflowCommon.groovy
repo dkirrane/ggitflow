@@ -490,7 +490,7 @@ class GitflowCommon {
     void gitflowResolveNameprefix() {
     }
 
-    void requireGitRepo() {
+    void requireGitRepo() throws GitflowException {
         log.debug("Verifying we are in a Git repo")
         try {
             executeLocal("git rev-parse --git-dir")
@@ -502,7 +502,7 @@ class GitflowCommon {
         }
     }
 
-    void checkRemoteConnection() {
+    void checkRemoteConnection() throws GitCommandException {
         log.debug("Verifying we can connect to the remote Git repo")
         def origin = getOrigin()
         if(origin) {
@@ -519,6 +519,13 @@ class GitflowCommon {
             String stErr = error.toString()
             Integer exitCode = process.exitValue()
 
+            log.debug ""
+            log.debug "Checking remote connection"
+            log.debug "Exit code: ${exitCode}"
+            log.debug "${stOut}"
+            log.debug "${stErr}"
+            log.debug ""
+
             if(exitCode != 0) {
                 def msg;
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
@@ -534,9 +541,9 @@ class GitflowCommon {
     void requireGitflowInitialized() {
     }
 
-    void requireCleanWorkingTree() {
+    void requireCleanWorkingTree() throws GitflowException {
         if(!this.gitIsCleanWorkingTree()){
-            throw new GitflowException("ERROR: Git Working tree contains unstaged or uncommited changes. Aborting.");
+            throw new GitflowException("Git Working tree contains unstaged or uncommited changes. Aborting.");
         }
     }
 

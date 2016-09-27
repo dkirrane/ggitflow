@@ -17,6 +17,7 @@
 package com.dkirrane.gitflow.groovy
 
 import static com.dkirrane.gitflow.groovy.Constants.*
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import groovy.transform.InheritConstructors
 import groovy.util.logging.Slf4j
@@ -36,7 +37,7 @@ class GitflowInit extends GitflowCommon {
     def supportBrnPref
     def versionTagPref
 
-    void cmdDefault() throws GitflowException {
+    void cmdDefault() throws GitCommandException, GitflowException {
         super.requireGitRepo()
 
         if(super.gitflowIsInitialized()) {

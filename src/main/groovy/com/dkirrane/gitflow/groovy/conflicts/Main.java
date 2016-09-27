@@ -21,6 +21,7 @@ import java.io.File;
 import com.dkirrane.gitflow.groovy.Constants;
 import com.dkirrane.gitflow.groovy.GitflowInit;
 import com.dkirrane.gitflow.groovy.ex.GitflowException;
+import com.dkirrane.gitflow.groovy.ex.GitCommandException;
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException;
 
 /**
@@ -28,7 +29,7 @@ import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException;
  */
 public class Main {
 
-    public static void main(String[] args) throws GitflowException, GitflowMergeConflictException {
+    public static void main(String[] args) throws GitCommandException, GitflowMergeConflictException, GitflowException {
         GitflowInit gitflowInit = new GitflowInit();
 //        gitflowInit.setRepoDir(new File("/Users/desmondkirrane/NetBeansProjects/GitHub/GroovyGitflow/ggitflow-test1"));
         gitflowInit.setRepoDir(new File("C:\\Dev\\Git\\IngenSG\\ingensg-integration-tests"));
