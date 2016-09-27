@@ -19,6 +19,7 @@ package com.dkirrane.gitflow.groovy
 import groovy.io.FileType
 import groovy.util.logging.Slf4j
 
+import static com.dkirrane.gitflow.groovy.Constants.*
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
