@@ -35,6 +35,8 @@ class GitflowCommon {
     File repoDir
 
     def prefixes = [:]
+    def origin
+    def originURL
 
     String executeLocal(cmd){
         return executeLocal(cmd, false, null)
@@ -115,14 +117,20 @@ class GitflowCommon {
     }
 
     String getOrigin() {
-        def remotes = []
-        def process = "git remote".execute(envp, repoDir)
-        process.in.eachLine { line -> remotes.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-        return remotes[0];
+        if (origin?.trim()) {
+            def remotes = []
+            def process = "git remote".execute(envp, repoDir)
+            process.in.eachLine { line -> remotes.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+            origin = remotes[0];
+        }
+        return origin
     }
 
     String getOriginURL() {
-        return executeLocal("git config --get remote.origin.url", true)
+        if (originURL?.trim()) {
+            return executeLocal("git config --get remote.origin.url", true)
+        }
+        return originURL
     }
 
     String getGitflowPrefixes(configName) {
