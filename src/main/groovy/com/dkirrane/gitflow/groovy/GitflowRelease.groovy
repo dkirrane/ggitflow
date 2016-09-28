@@ -33,6 +33,7 @@ class GitflowRelease {
 
     def startCommit
     def squash
+    def tagMsg
     def sign
     def signingkey
     def msgPrefix
@@ -153,6 +154,7 @@ class GitflowRelease {
         }
         msgPrefix = msgPrefix ? msgPrefix + " " : ""
         msgSuffix = msgSuffix ? " " + msgSuffix : ""
+        tagMsg = tagMsg ? " " + tagMsg : ""
 
         def prefix = init.getReleaseBranchPrefix()
         def versionPrefix = init.getVersionTagPrefix()
@@ -231,14 +233,14 @@ class GitflowRelease {
         // but the tag was set successful, we skip it now
         if(!init.gitTagExists(tagName)){
             log.info "Tagging release branch ${releaseBranch} on ${master}"
-            def tagMsg = "Release version ${tagName}"
+            def tagMessage = "Release version ${tagName}${tagMsg}"
             if(sign){
                 if(!signingkey){
                     throw new GitflowException("Missing argument <signingkey>")
                 }
-                init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
+                init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMessage}\"", "${tagName}", "${master}"])
             } else{
-                init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
+                init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMessage}\"", "${tagName}", "${master}"])
             }
         }
 
