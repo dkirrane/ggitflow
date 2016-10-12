@@ -117,7 +117,7 @@ class GitflowCommon {
     }
 
     String getOrigin() {
-        if (origin?.trim()) {
+        if (null == origin) {
             def remotes = []
             def process = "git remote".execute(envp, repoDir)
             process.in.eachLine { line -> remotes.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
@@ -127,8 +127,8 @@ class GitflowCommon {
     }
 
     String getOriginURL() {
-        if (originURL?.trim()) {
-            return executeLocal("git config --get remote.origin.url", true)
+        if (null == originURL) {
+            originURL = executeLocal("git config --get remote.origin.url", true)
         }
         return originURL
     }
