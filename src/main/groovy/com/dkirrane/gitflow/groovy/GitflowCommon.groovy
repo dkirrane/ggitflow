@@ -310,6 +310,11 @@ class GitflowCommon {
 
         return localTags.reverse(); // reverse here so latest tag is at index 0
     }
+    
+    String gitLatestTagOnBranch() {
+        def latestBranchTag = executeLocal("git describe --abbrev=0 --tags", true)
+        return latestBranchTag;
+    }    
 
     Boolean gitIsCleanWorkingTree() {
         Process headProcess = "git rev-parse --verify HEAD".execute(envp, repoDir)
