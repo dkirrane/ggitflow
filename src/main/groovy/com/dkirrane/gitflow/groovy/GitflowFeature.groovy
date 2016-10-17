@@ -16,6 +16,8 @@
  */
 package com.dkirrane.gitflow.groovy
 
+import static com.dkirrane.gitflow.groovy.Constants.*
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 import groovy.util.logging.Slf4j
@@ -33,13 +35,11 @@ class GitflowFeature {
     def isRebase
     def isInteractive
     def squash
-    def keepLocal
-    def keepRemote
     def msgPrefix
     def msgSuffix
     def push
 
-    void start(String featureBranchName) throws GitflowException {
+    void start(String featureBranchName) throws GitCommandException, GitflowException {
         init.requireGitRepo()
 
         if(!featureBranchName) {
@@ -69,7 +69,7 @@ class GitflowFeature {
 
         // sanity checks
         if(init.gitBranchExists(featureBranch)){
-            throw new GitflowException("ERROR: feature branch ${featureBranch} already exists")
+            throw new GitflowException("Feature branch ${featureBranch} already exists")
         }
 
         // update the local repo with remote changes, if asked
@@ -81,9 +81,9 @@ class GitflowFeature {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -103,9 +103,9 @@ class GitflowFeature {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                    errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue pushing feature branch '${featureBranch}' to '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -118,11 +118,11 @@ class GitflowFeature {
         log.info ""
         log.info "Now, start committing on your feature. When done, use:"
         log.info ""
-        log.info "     mvn ggitflow:feature-finish"
+        log.info "     mvn gitflow:feature-finish"
         log.info ""
     }
 
-    void finish(String featureBranchName) throws GitflowException, GitflowMergeConflictException {
+    void finish(String featureBranchName) throws GitCommandException, GitflowMergeConflictException, GitflowException {
         init.requireGitRepo()
 
         if(!featureBranchName) {
@@ -191,9 +191,9 @@ class GitflowFeature {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -233,14 +233,14 @@ class GitflowFeature {
             }
         }
 
-        // we have a merge conflict
-
-
-        // when no merge conflict is detected, just clean up the feature branch
-        this.helperFinishCleanup(featureBranch)
+        log.info ""
+        log.info "Summary of actions:"
+        log.info "- The feature branch '${featureBranch}' was merged into '${develop}'"
+        log.info "- You are now on branch '${develop}'"
+        log.info ""
     }
 
-    private void rebase(String featureBranchName) {
+    private void rebase(String featureBranchName) throws GitCommandException, GitflowException {
         init.requireCleanWorkingTree()
         init.requireBranch(featureBranchName)
 
@@ -264,57 +264,63 @@ class GitflowFeature {
             log.warn "WARN: Finish was aborted due to conflicts during rebase."
             log.warn "WARN: Please finish the rebase manually now."
             log.warn "WARN: When finished, re-run:"
-            log.warn "WARN: mvn ggitflow:feature-finish"
+            log.warn "WARN: mvn gitflow:feature-finish"
             throw new GitflowException("Rebase feature onto develop has conflicts")
         } else {
             log.debug "Rebase complete"
         }
     }
 
-    private void helperFinishCleanup(String featureBranch) {
-        init.requireBranch(featureBranch)
-
-        init.requireCleanWorkingTree()
-
-        // delete branch
+    void publish(String featureBranch, boolean pushIt) throws GitCommandException, GitflowException {
         def origin = init.getOrigin()
         def develop = init.getDevelopBranch()
-        if(origin && !keepRemote){
-            //Delete remote feature branch
+        if(pushIt && origin){
+
+            def pushing = [develop]
+            for (branch in pushing) {
+                pushBranch(origin, branch)
+            }
+
+            log.info "Deleting ${featureBranch}"
+            init.executeLocal("git branch -D ${featureBranch}")
+
+            // Delete remote release branch
             if(init.gitRemoteBranchExists("${origin}/${featureBranch}")){
-                init.executeRemote("git push ${origin} :${featureBranch}")
+                log.info "Deleting ${origin}/${featureBranch}"
+                init.executeRemote("git push --delete ${origin} ${featureBranch}")
             }
-        }
 
-        if (!keepLocal) {
-            if(init.gitIsBranchMergedInto(featureBranch, develop)){
-                def curr = init.gitCurrentBranch()
-                if(featureBranch == curr){
-                    init.executeLocal("git checkout ${develop}")
-                }
-                init.executeLocal("git branch -D ${featureBranch}")
+        } else {
+            log.warn "===> Once happy with the merge you MUST manually push:"
+            log.warn ""
+            log.warn "        git push ${origin} ${develop}"
+            log.warn ""
+            log.warn "===> And manually delete the feature branch:"
+            log.warn ""
+            log.warn "        git branch --delete ${featureBranch}"
+            if(init.gitRemoteBranchExists("${origin}/${featureBranch}")){
+                log.warn "        git push --delete ${origin} ${featureBranch}"
             }
+            log.info ""
         }
+    }
 
-        log.info ""
-        log.info "Summary of actions:"
-        log.info "- The feature branch '${featureBranch}' was merged into '${develop}'"
-        log.info "- You are now on branch '${develop}'"
-        if(keepLocal) {
-            log.info "- Local Feature branch '${featureBranch}' is still available"
+    void pushBranch(String origin, String branch) throws GitCommandException, GitflowException {
+        if(!init.gitRemoteBranchExists("${origin}/${branch}")){
+            log.debug "Remote branch ${branch} does not exists. Skipping push"
+            return;
         }
-        else {
-            log.info "- Local Feature branch '${featureBranch}' has been deleted"
-        }
-        if(origin) {
-            if(keepRemote) {
-                log.info "- Remote Feature branch '${featureBranch}' is still available from '${origin}'"
+        log.info "Pushing ${branch}"
+        Integer exitCode = init.executeRemote("git push -u ${origin} ${branch}")
+        if(exitCode){
+            def errorMsg
+            if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. ${PUSH_ISSUE_WIN}"
+            } else {
+                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. ${PUSH_ISSUE_LIN}"
             }
-            else {
-                log.info "- Remote Feature branch '${featureBranch}' has been deleted from '${origin}'"
-            }
+            throw new GitflowException(errorMsg)
         }
-        log.info ""
     }
 
 }

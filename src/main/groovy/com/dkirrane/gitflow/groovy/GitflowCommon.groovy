@@ -19,7 +19,9 @@ package com.dkirrane.gitflow.groovy
 import groovy.io.FileType
 import groovy.util.logging.Slf4j
 
+import static com.dkirrane.gitflow.groovy.Constants.*
 import com.dkirrane.gitflow.groovy.ex.GitflowException
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
 
 /**
@@ -33,6 +35,8 @@ class GitflowCommon {
     File repoDir
 
     def prefixes = [:]
+    def origin
+    def originURL
 
     String executeLocal(cmd){
         return executeLocal(cmd, false, null)
@@ -52,17 +56,20 @@ class GitflowCommon {
         def process = cmd.execute(envp, repoDir)
         process.consumeProcessOutput(standard, error)
         process.waitFor()
+        def exitCode = process.exitValue()
 
         log.debug standard.toString()
-        log.debug "Exit code: " + process.exitValue()
+        log.debug "Exit code: " + exitCode
         if(!ignoreExitCode){
-            if (process.exitValue() != 0){
-                log.error "ERROR: executing command: '${cmd}'"
-                log.error error.toString()
-                if(standard.toString().contains("Merge conflict")){
-                    throw new GitflowMergeConflictException(standard.toString())
+            if (exitCode != 0){
+                def msg = "Error executing command: '${cmd}'"
+                def stout = standard.toString()
+                def sterr = error.toString()
+                if(stout.contains("Merge conflict") || stout.contains("CONFLICT")){
+                    List<File> conflictedFiles = gitMergeConflicts()
+                    throw new GitflowMergeConflictException(standard.toString(), conflictedFiles)
                 } else{
-                    throw new GitflowException(error.toString())
+                    throw new GitCommandException(msg, exitCode, standard.toString(), error.toString())
                 }
             }
         } else {
@@ -94,15 +101,15 @@ class GitflowCommon {
             if(error.toString().startsWith("Everything up-to-date")) { // This should not be an error
                 log.debug "Executing command: '${cmd}'"
                 log.debug "Exit code: " + process.exitValue()
-                log.debug "Error: " + error.toString()
+                log.debug error.toString()
             } else if(error.toString().startsWith("To ${getOriginURL()}")) { // This should not be an error
                 log.debug "Executing command: '${cmd}'"
                 log.debug "Exit code: " + process.exitValue()
-                log.debug "Error: " + error.toString()
+                log.debug error.toString()
             } else {
                 log.warn "Executing command: '${cmd}'"
                 log.warn "Exit code: " + process.exitValue()
-                log.warn "Error: " + error.toString()
+                log.warn error.toString()
             }
         }
 
@@ -110,18 +117,23 @@ class GitflowCommon {
     }
 
     String getOrigin() {
-        def remotes = []
-        def process = "git remote".execute(envp, repoDir)
-        process.in.eachLine { line -> remotes.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-        return remotes[0];
+        if (null == origin) {
+            def remotes = []
+            def process = "git remote".execute(envp, repoDir)
+            process.in.eachLine { line -> remotes.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+            origin = remotes[0];
+        }
+        return origin
     }
 
     String getOriginURL() {
-        return executeLocal("git config --get remote.origin.url", true)
+        if (null == originURL) {
+            originURL = executeLocal("git config --get remote.origin.url", true)
+        }
+        return originURL
     }
 
     String getGitflowPrefixes(configName) {
-        log.debug "getGitflowPrefixes"
         String configValue;
         if(prefixes?.isEmpty() || !prefixes.containsKey(configName)) {
             def key
@@ -206,11 +218,11 @@ class GitflowCommon {
     }
 
     List gitRemoteBranches() {
-        // git branch -r --no-color
         def remoteBranches = []
 
-        def process = "git branch -r --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> remoteBranches.add(line.replaceAll("^(\\s+)", "")) }
+        // git branch -r --no-color
+        def process = "git ls-remote --heads --refs ${getOriginURL()}".execute(envp, repoDir)
+        process.in.eachLine { line -> remoteBranches.add(line.replaceAll("^.*refs/heads/", "${origin}/")) }
 
         return remoteBranches;
     }
@@ -239,47 +251,91 @@ class GitflowCommon {
         return matcher[0].replaceAll("^(\\*\\s+|\\s+)", "")
     }
 
-    List gitLocalFeatureBranches() {
-        List localFeatureBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localFeatureBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
+    List gitRemoteFeatureBranches() {
         String prefix = getFeatureBranchPrefix()
-        return localFeatureBranches.findAll({ it.startsWith(prefix) })
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
+    }
+
+    List gitLocalFeatureBranches() {
+        String prefix = getFeatureBranchPrefix()
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteReleaseBranches() {
+        String prefix = getReleaseBranchPrefix()
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalReleaseBranches() {
-        List localReleaseBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localReleaseBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
         String prefix = getReleaseBranchPrefix()
-        return localReleaseBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteHotfixBranches() {
+        String prefix = getHotfixBranchPrefix()
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalHotfixBranches() {
-        List localHotfixBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localHotfixBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
         String prefix = getHotfixBranchPrefix()
-        return localHotfixBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
+    }
+
+    List gitRemoteSupportBranches() {
+        String prefix = getSupportBranchPrefix()
+        return gitRemoteBranches().findAll({ it.startsWith(prefix) })
     }
 
     List gitLocalSupportBranches() {
-        List localSupportBranches = new ArrayList()
-
-        def process = "git branch --no-color".execute(envp, repoDir)
-        process.in.eachLine { line -> localSupportBranches.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
-
         String prefix = getSupportBranchPrefix()
-        return localSupportBranches.findAll({ it.startsWith(prefix) })
+        return gitLocalBranches().findAll({ it.startsWith(prefix) })
     }
 
+    List gitRemoteTags() {
+        // git tag
+        def remoteTags = []
+
+        def process = "git ls-remote --tags --refs --quiet".execute(envp, repoDir)
+        process.in.eachLine { line -> remoteTags.add(line.replaceAll("^.*refs/tags/", "")) }
+
+        return remoteTags;
+    }
+
+    List gitLocalTags() {
+        // git tag
+        def localTags = []
+
+        def process = "git tag --sort=taggerdate".execute(envp, repoDir)
+        process.in.eachLine { line -> localTags.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+
+        return localTags.reverse(); // reverse here so latest tag is at index 0
+    }
+    
+    List gitLocalTagsOnBranch(String branch) {
+        // git tag
+        def localTags = []
+
+        def process = "git tag --sort=taggerdate --merged ${branch}".execute(envp, repoDir)
+        process.in.eachLine { line -> localTags.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+
+        return localTags.reverse(); // reverse here so latest tag is at index 0
+    }    
+    
+    String gitLatestTagOnBranch() {
+        def latestBranchTag = executeLocal("git describe --abbrev=0 --tags", true)
+        return latestBranchTag;
+    }    
+
     Boolean gitIsCleanWorkingTree() {
+        Process headProcess = "git rev-parse --verify HEAD".execute(envp, repoDir)
+        def headCode =  headProcess.waitFor();
+        log.debug "Verify HEAD code: " + headCode;
+
+        // Check if any conflicts
+        Process uiProcess = "git update-index -q --ignore-submodules --refresh".execute(envp, repoDir)
+        def uiCode =  uiProcess.waitFor();
+        log.debug "Update index code: " + uiCode;
+
         // Check for unstaged changes in the working tree (exit code is 0 if clean)
         Process wcProcess = "git diff --no-ext-diff --ignore-submodules --quiet --exit-code".execute(envp, repoDir)
         def wcCode =  wcProcess.waitFor();
@@ -291,7 +347,11 @@ class GitflowCommon {
         log.debug "Stage code: " + idxCode;
 
         boolean clean = false;
-        if(0 != wcCode){
+        if(0 != headCode){
+            clean = false
+        } else if(0 != uiCode){
+            clean = false
+        } else if(0 != wcCode){
             clean = false
         } else if(0!=idxCode){
             clean = false
@@ -453,7 +513,7 @@ class GitflowCommon {
     void gitflowResolveNameprefix() {
     }
 
-    void requireGitRepo() {
+    void requireGitRepo() throws GitflowException {
         log.debug("Verifying we are in a Git repo")
         try {
             executeLocal("git rev-parse --git-dir")
@@ -465,13 +525,16 @@ class GitflowCommon {
         }
     }
 
-    void checkRemoteConnection() {
+    void checkRemoteConnection() throws GitCommandException {
         log.debug("Verifying we can connect to the remote Git repo")
         def origin = getOrigin()
         if(origin) {
             StringBuilder standard = new StringBuilder(450000)
             StringBuilder error = new StringBuilder(450000)
-            def process = "git fetch --all".execute(envp, repoDir)
+            // @todo No way currently to check if the user has Git Hook 'access-control' privledges to the Git repo.
+            // This wil test connection but also update remotes and tags
+            // Fetch any new tags and prune any branches that may already be deleted
+            def process = "git fetch --all --tags --prune".execute(envp, repoDir)
             process.consumeProcessOutput(standard, error)
             process.waitFor()
 
@@ -479,18 +542,21 @@ class GitflowCommon {
             String stErr = error.toString()
             Integer exitCode = process.exitValue()
 
-            if(exitCode != 0 || stErr) {
-                println("")
-                log.info stOut
-                log.error "Issue occurred when connecting to remote Git repo '${origin}' ${getOriginURL()}"
-                log.error "Check your Git credentials and review Git error below:"
-                log.error "Git exit code: ${exitCode}"
-                log.error stErr.trim()
-                println("")
-            }
+            log.debug ""
+            log.debug "Checking remote connection"
+            log.debug "Exit code: ${exitCode}"
+            log.debug "${stOut}"
+            log.debug "${stErr}"
+            log.debug ""
 
             if(exitCode != 0) {
-                throw new GitflowException("Cannot connect to remote Git repo '${origin}'. Check your Git credentials.")
+                def msg;
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    msg = "Issue occurred when connecting to remote Git repo '${origin}' '${getOriginURL()}'. ${PUSH_ISSUE_WIN}";
+                } else {
+                    msg = "Issue occurred when connecting to remote Git repo '${origin}' '${getOriginURL()}'. ${PUSH_ISSUE_LIN}"
+                }
+                throw new GitCommandException(msg, exitCode, stOut.toString(), stErr.toString())
             }
         }
     }
@@ -498,9 +564,9 @@ class GitflowCommon {
     void requireGitflowInitialized() {
     }
 
-    void requireCleanWorkingTree() {
+    void requireCleanWorkingTree() throws GitflowException {
         if(!this.gitIsCleanWorkingTree()){
-            throw new GitflowException("ERROR: Git Working tree contains unstaged or uncommited changes. Aborting.");
+            throw new GitflowException("Git Working tree contains unstaged or uncommited changes. Aborting.");
         }
     }
 

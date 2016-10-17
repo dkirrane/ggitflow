@@ -17,6 +17,7 @@
 package com.dkirrane.gitflow.groovy
 
 import static com.dkirrane.gitflow.groovy.Constants.*
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowException
 import groovy.transform.InheritConstructors
 import groovy.util.logging.Slf4j
@@ -36,7 +37,7 @@ class GitflowInit extends GitflowCommon {
     def supportBrnPref
     def versionTagPref
 
-    void cmdDefault() throws GitflowException {
+    void cmdDefault() throws GitCommandException, GitflowException {
         super.requireGitRepo()
 
         if(super.gitflowIsInitialized()) {
@@ -64,12 +65,14 @@ class GitflowInit extends GitflowCommon {
         log.info "\t Version tag prefix '${versionTagPref}'"
 
         def origin = super.getOrigin()
-        log.info "\t Origin = '${origin}'"
+        def originUrl = super.getOriginURL()
+        log.info "\t Remote '${origin}' '${originUrl}'"
 
         // add a master branch if no such branch exists yet
+        log.debug "Setting git config gitflow.branch.master"
         def masterBranch = super.getMasterBranch()
         if( masterBranch?.trim() ) {
-            log.debug "master branch '${masterBranch}' already configured."
+            log.debug "git config gitflow.branch.master '${masterBranch}' already configured."
         } else {
             if(super.gitAllBranches().size() == 0){
                 log.debug "No branches exist yet. Master branch must be created now."
@@ -82,8 +85,7 @@ class GitflowInit extends GitflowCommon {
                 super.executeLocal("git config gitflow.branch.master ${masterBrnName}")
             } else {
                 log.error ""
-                log.error "Gitflow is not configured but branches exist:"
-                log.error super.gitAllBranches()
+                log.error "Gitflow is not configured but branches exist: ${super.gitAllBranches()}"
 
                 log.error "Run this command to set the branch used for bringing forth production releases:"
                 log.error "git config gitflow.branch.master <branch_name>"
@@ -92,9 +94,10 @@ class GitflowInit extends GitflowCommon {
         }
 
         // add a develop branch if no such branch exists yet
+        log.debug "Setting git config gitflow.branch.develop"
         def developBranch = super.getDevelopBranch()
         if( developBranch?.trim() ) {
-            log.debug "develop branch '${developBranch}' already configured."
+            log.debug "git config gitflow.branch.develop '${developBranch}' already configured."
         } else {
             if(super.gitAllBranches().minus(["${masterBrnName}","${origin}/${masterBrnName}"]).size() == 0){
                 log.debug "No branches exist yet. Base branches must be created now."
@@ -107,12 +110,11 @@ class GitflowInit extends GitflowCommon {
                 super.executeLocal("git config gitflow.branch.develop ${developBrnName}")
             } else {
                 log.error ""
-                log.error "Gitflow is not configured but branches exist:"
-                log.error super.gitAllBranches()
+                log.error "Gitflow is not configured but branches exist: ${super.gitAllBranches()}"
 
                 log.error  "Run this command to set the branch used for development of the next release:"
                 log.error  "git config gitflow.branch.develop <branch_name>"
-                throw new GitflowException("You need to configure the develop branch 'git config gitflow.branch.develop <branch_name>'")
+                throw new GitflowException("You need to configure the develop branch prefix 'git config gitflow.branch.develop <branch_name>'")
             }
         }
 
@@ -145,9 +147,9 @@ class GitflowInit extends GitflowCommon {
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                        errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. ${PUSH_ISSUE_WIN}"
                     } else {
-                        errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your ~/.netrc file"
+                        errorMsg = "Issue pushing feature branch '${masterBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. ${PUSH_ISSUE_LIN}"
                     }
                     throw new GitflowException(errorMsg)
                 }
@@ -173,9 +175,9 @@ class GitflowInit extends GitflowCommon {
                 if(exitCode){
                     def errorMsg
                     if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                        errorMsg = "Issue pushing feature branch '${developBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your ~/_netrc file"
+                        errorMsg = "Issue pushing feature branch '${developBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. ${PUSH_ISSUE_WIN}"
                     } else {
-                        errorMsg = "Issue pushing feature branch '${developBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. Please ensure your username and password is in your ~/.netrc file"
+                        errorMsg = "Issue pushing feature branch '${developBrnName}' to '${origin}'. URL[${super.getOriginURL()}]. ${PUSH_ISSUE_LIN}"
                     }
                     throw new GitflowException(errorMsg)
                 }
@@ -185,7 +187,7 @@ class GitflowInit extends GitflowCommon {
         // Feature branches
         def feature = super.getFeatureBranchPrefix()
         if(feature?.trim()) {
-            log.debug feature
+            log.debug "git config gitflow.branch.feature '${feature}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.feature ${featureBrnPref}")
         }
@@ -193,7 +195,7 @@ class GitflowInit extends GitflowCommon {
         // Release branches
         def release = super.getReleaseBranchPrefix()
         if(release?.trim()) {
-            log.debug release
+            log.debug "git config gitflow.branch.release '${release}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.release ${releaseBrnPref}")
         }
@@ -201,7 +203,7 @@ class GitflowInit extends GitflowCommon {
         // Hotfix branches
         def hotfix = super.getHotfixBranchPrefix()
         if(hotfix?.trim()) {
-            log.debug hotfix
+            log.debug "git config gitflow.branch.hotfix '${hotfix}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.hotfix ${hotfixBrnPref}")
         }
@@ -209,7 +211,7 @@ class GitflowInit extends GitflowCommon {
         // Support branches
         def support = super.getSupportBranchPrefix()
         if(support?.trim()) {
-            log.debug support
+            log.debug "git config gitflow.branch.support '${support}' already configured."
         } else {
             super.executeLocal("git config gitflow.prefix.support ${supportBrnPref}")
         }
@@ -217,17 +219,22 @@ class GitflowInit extends GitflowCommon {
         // Version tag prefix
         def versiontag = super.getVersionTagPrefix()
         if(versiontag?.trim()) {
-            log.debug versiontag
+            log.debug "git config gitflow.branch.versiontag '${versiontag}' already configured."
         } else {
             if(versionTagPref?.trim()) {
                 super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "${versionTagPref}"])
             } else{
-                super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "\"\""])
-            }            
+                // Windows needs to doucle quotes. Linux does not
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    super.executeLocal(["git", "config", "gitflow.prefix.versiontag", "\"\""])
+                } else {
+                    super.executeLocal(["git", "config", "gitflow.prefix.versiontag", ""])
+                }
+            }
         }
 
-        log.debug "Completed Gitflow initialisation"
-        super.executeLocal("git config --get-regexp gitflow.*")       
+        def result = super.executeLocal("git config --get-regexp gitflow.*")
+        log.debug "Completed Gitflow initialisation\n\n${result}\n"
     }
 }
 

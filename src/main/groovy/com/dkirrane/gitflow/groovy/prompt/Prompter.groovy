@@ -14,21 +14,23 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dkirrane.gitflow.groovy.ex
+package com.dkirrane.gitflow.groovy.prompt
+
+import static org.fusesource.jansi.Ansi.Color.GREEN
+import static org.fusesource.jansi.Ansi.ansi
+import java.util.Scanner
 
 /**
  *
  */
-class GitflowMergeConflictException extends Exception {
+@Singleton(lazy=true)
+class Prompter {
 
-    List<File> conflictedFiles
-
-    GitflowMergeConflictException(String msg){
-        super(msg)
-    }
-
-    GitflowMergeConflictException(String msg, List<File> conflictedFiles){
-        super(msg)
-        this.conflictedFiles = conflictedFiles
+    String prompt(String message) {
+        Scanner scanner = new Scanner(System.in);
+        System.out.println(ansi().fg(GREEN).bold().a(message).boldOff().reset().toString());
+        String answer = scanner.nextLine();
+        return answer;
     }
 }
+

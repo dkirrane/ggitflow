@@ -5,7 +5,7 @@ apply plugin: 'application'
 //apply plugin: 'maven-publish'
 
 group = 'com.dkirrane.groovy.gitflow'
-version = '2.6'
+version = '3.0'
 
 mainClassName = "com.dkirrane.gitflow.groovy.conflicts.Main"
 
@@ -17,11 +17,11 @@ ext {
     scmUrl = 'scm:git:https://github.com/dkirrane/ggitflow.git'
 }
 
-sourceCompatibility = 1.5
-targetCompatibility = 1.5
+sourceCompatibility = 1.7
+targetCompatibility = 1.7
 
 task wrapper(type: Wrapper) {
-    gradleVersion = '1.10'
+    gradleVersion = '3.1'
 }
 
 // dependency management as you like
@@ -30,9 +30,11 @@ repositories {
 }
 
 dependencies {
-    compile 'org.codehaus.groovy:groovy-all:2.0.1'
-    compile 'org.apache.maven:maven-artifact:3.1.1'
+//    compile 'org.codehaus.groovy:groovy-all:2.4.7'
+    compile 'org.codehaus.groovy:groovy:2.4.7'
+    compile 'org.apache.maven:maven-artifact:3.3.9'
     compile 'org.slf4j:slf4j-api:1.7.21'
+    compile 'org.fusesource.jansi:jansi:1.12'
 
     // http://www.slf4j.org/faq.html#configure_logging
     testCompile 'ch.qos.logback:logback-classic:1.1.1'

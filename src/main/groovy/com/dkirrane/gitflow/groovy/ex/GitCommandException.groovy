@@ -14,21 +14,25 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
-package com.dkirrane.gitflow.groovy.ex
+package com.dkirrane.gitflow.groovy.ex;
 
 /**
  *
  */
-class GitflowMergeConflictException extends Exception {
+class GitCommandException extends Exception {
 
-    List<File> conflictedFiles
+    Integer exitCode
+    String stout
+    String sterr
 
-    GitflowMergeConflictException(String msg){
+    GitCommandException(String msg) {
         super(msg)
     }
 
-    GitflowMergeConflictException(String msg, List<File> conflictedFiles){
+    GitCommandException(String msg, Integer exitCode, String stout, String sterr) {
         super(msg)
-        this.conflictedFiles = conflictedFiles
+        this.exitCode = exitCode
+        this.stout = stout
+        this.sterr = sterr
     }
 }

@@ -1,4 +1,4 @@
-/* 
+/*
  * Copyright (C) 2014 Desmond Kirrane
  *
  * This program is free software: you can redistribute it and/or modify
@@ -25,4 +25,7 @@ public class Constants {
     public static final String DEFAULT_HOTFIX_BRN_PREFIX = "hotfix/";
     public static final String DEFAULT_SUPPORT_BRN_PREFIX = "support/";
     public static final String DEFAULT_VERSION_TAG_PREFIX = "";
+
+    public static final String PUSH_ISSUE_WIN = "\n\t\tCheck your Git credentials (~/_netrc or credential.helper) and any repository Git hooks";
+    public static final String PUSH_ISSUE_LIN = "\n\t\tCheck your Git credentials (~/.netrc or credential.helper) and any repository Git hooks";
 }

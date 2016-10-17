@@ -16,8 +16,11 @@
  */
 package com.dkirrane.gitflow.groovy
 
+import static com.dkirrane.gitflow.groovy.Constants.*
 import com.dkirrane.gitflow.groovy.ex.GitflowException
+import com.dkirrane.gitflow.groovy.ex.GitCommandException
 import com.dkirrane.gitflow.groovy.ex.GitflowMergeConflictException
+import com.dkirrane.gitflow.groovy.prompt.Prompter
 import groovy.util.logging.Slf4j
 
 /**
@@ -30,15 +33,14 @@ class GitflowHotfix {
 
     def startCommit
     def squash
+    def tagMsg
     def sign
     def signingkey
-    def keepLocal
-    def keepRemote
     def msgPrefix
     def msgSuffix
     def push
 
-    void start(String hotfixBranchName) throws GitflowException {
+    void start(String hotfixBranchName) throws GitCommandException, GitflowException {
         init.requireGitRepo()
 
         if(!hotfixBranchName) {
@@ -90,9 +92,9 @@ class GitflowHotfix {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -111,9 +113,9 @@ class GitflowHotfix {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing feature branch '${hotfixBranch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                    errorMsg = "Issue pushing hotfix branch '${hotfixBranch}' to '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue pushing feature branch '${hotfixBranch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue pushing hotfix branch '${hotfixBranch}' to '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -128,30 +130,31 @@ class GitflowHotfix {
         log.info "- Start committing your bug fixes"
         log.info "- When done, run:"
         log.info ""
-        log.info "     mvn ggitflow:hotfix-finish"
+        log.info "     mvn gitflow hotfix-finish command"
         log.info ""
 
     }
 
-    void finish(String hotfixBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
-        finishToMaster(hotfixBranchName, pushMerge)
-        finishToDevelop(hotfixBranchName, pushMerge)
+    void finish(String hotfixBranchName, String tagName) throws GitCommandException, GitflowMergeConflictException, GitflowException {
+        finishToMaster(hotfixBranchName, tagName)
+        finishToDevelop(hotfixBranchName, tagName)
     }
 
-    void finishToMaster(String hotfixBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
+    void finishToMaster(String hotfixBranchName, String tagName) throws GitCommandException, GitflowMergeConflictException, GitflowException {
         init.requireGitRepo()
 
         if(!hotfixBranchName) {
             throw new GitflowException("Missing argument <hotfixBranchName>")
         }
-        if(pushMerge == null) {
-            throw new GitflowException("Missing argument <pushMerge>")
+        if(!tagName) {
+            throw new GitflowException("Missing argument <tagName>")
         }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
         }
         msgPrefix = msgPrefix ? msgPrefix + " " : ""
         msgSuffix = msgSuffix ? " " + msgSuffix : ""
+        tagMsg = tagMsg ? " " + tagMsg : ""
 
         def prefix = init.getHotfixBranchPrefix()
         def versionPrefix = init.getVersionTagPrefix()
@@ -160,12 +163,10 @@ class GitflowHotfix {
             hotfixBranchName = hotfixBranchName.minus(prefix)
         }
         def hotfixBranch = prefix + hotfixBranchName
-        def tagName = versionPrefix + hotfixBranchName
 
         // sanity checks
         init.requireLocalBranch(hotfixBranch)
         init.requireCleanWorkingTree()
-        init.requireTagAbsent(tagName)
 
         def origin = init.getOrigin()
         def develop = init.getDevelopBranch()
@@ -176,29 +177,66 @@ class GitflowHotfix {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
 
             if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
-                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
+                init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local hotfix branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
                 init.requireBranchesEqual(develop, "${origin}/${develop}")
             }
             if(init.gitRemoteBranchExists("${origin}/${master}")){
-                init.requireBranchesEqual(master, "${origin}/${master}")
+                if(init.gitIsBranchMergedInto(hotfixBranch, master)){
+                    init.requireLocalBranchNotBehind(master, "${origin}/${master}") // local hotfix branch may have already been merged to local master i.e. re-running finish after merge conflict
+                } else {
+                    init.requireBranchesEqual(master, "${origin}/${master}")
+                }
+            }
+        }
+
+        // If the branch is already merged there is no need to check the hotfix branch
+	// This can happen when the merge in develop fails and we rerun the finish.
+        if(!init.gitIsBranchMergedInto(hotfixBranch, master)){
+            // Check if the hotfix branch:
+	    // - has commits: No reason to finish a hotfix without commits
+            // - Is ahead of the BASE: If it's not a good idea to merge
+            // - Can be merged: If there's no common ancestor we can't merge the hotfix
+            Integer result = init.gitCompareBranches(hotfixBranch, master);
+            switch (result) {
+            case 0:
+                throw new GitflowException("You need some commits in the hotfix branch '${hotfixBranch}'. No reason to finish a hotfix without commits!!!");
+            case 1:
+                throw new GitflowException("The hotfix branch '${hotfixBranch}' is not ahead of branch '${master}'. It's not a good idea to merge!!!");
+            case 4:
+                throw new GitflowException("The hotfix branch '${hotfixBranch}' has no common ancestor with branch '${master}'. Cannot merge this hotfix branch!!!");
+            default:
+                log.debug "Compared Branches ${result}"
+            }
+        }
+
+	// We ask for a tag, be sure it does not exist or
+        // points to the latest hotfix commit
+        if(init.gitTagExists(tagName)){
+            Integer result = init.gitCompareBranches(hotfixBranch, master);
+            if(0 != result){
+                throw new GitflowException("Tag '${tagName}' already exists and does not point to hotfix branch '${hotfixBranch}'");
             }
         }
 
         // try to merge into master
-        // in case a previous attempt to finish this release branch has failed,
+        // in case a previous attempt to finish this hotfix branch has failed,
         // but the merge into master was successful, we skip it now
         if(!init.gitIsBranchMergedInto(hotfixBranch, master)){
             log.info "Merging hotfix branch ${hotfixBranch} into ${master}"
+
+            // Before we merge be sure the tag does not exist
+            init.requireTagAbsent(tagName)
+
             init.executeLocal("git checkout ${master}")
 
             def msg = "${msgPrefix}Merge branch '${hotfixBranch}' into ${master}${msgSuffix}"
@@ -213,49 +251,32 @@ class GitflowHotfix {
             }
         }
 
+        // Try to tag the hotfix.
+        // In case a previous attempt to finish this hotfix branch has failed,
+        // but the tag was set successful, we skip it now
         if(!init.gitTagExists(tagName)){
             log.info "Tagging hotfix branch ${hotfixBranch} on ${master}"
-            def tagMsg = "Hotfix version ${tagName}"
+            def tagMessage = "Hotfix version ${tagName}${tagMsg}"
             if(sign){
                 if(!signingkey){
                     throw new GitflowException("Missing argument <signingkey>")
                 }
-                init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
+                init.executeLocal(["git", "tag", "-u", "${signingkey}", "-m", "\"${tagMessage}\"", "${tagName}", "${master}"])
             } else{
-                init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMsg}\"", "${tagName}", "${master}"])
-            }
-        }
-
-        // push it
-        if(pushMerge && origin) {
-            log.info "Pushing tag ${tagName}"
-            Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
-            if(exitCodeTag){
-                def errorMsg
-                if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
-                } else {
-                    errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
-                }
-                throw new GitflowException(errorMsg)
-            }
-
-            def pushing = [master]
-            for (branch in pushing) {
-                push(origin, branch)
+                init.executeLocal(["git", "tag", "-a", "-m", "\"${tagMessage}\"", "${tagName}", "${master}"])
             }
         }
 
     }
 
-    void finishToDevelop(String hotfixBranchName, Boolean pushMerge) throws GitflowException, GitflowMergeConflictException {
+    void finishToDevelop(String hotfixBranchName, String tagName) throws GitCommandException, GitflowMergeConflictException, GitflowException {
         init.requireGitRepo()
 
         if(!hotfixBranchName) {
             throw new GitflowException("Missing argument <hotfixBranchName>")
         }
-        if(pushMerge == null) {
-            throw new GitflowException("Missing argument <pushMerge>")
+        if(!tagName) {
+            throw new GitflowException("Missing argument <tagName>")
         }
         if(!init.gitflowIsInitialized()){
             throw new GitflowException("Gitflow is not initialized.")
@@ -270,7 +291,6 @@ class GitflowHotfix {
             hotfixBranchName = hotfixBranchName.minus(prefix)
         }
         def hotfixBranch = prefix + hotfixBranchName
-        def tagName = versionPrefix + hotfixBranchName
 
         // sanity checks
         init.requireLocalBranch(hotfixBranch)
@@ -285,9 +305,9 @@ class GitflowHotfix {
             if(exitCode){
                 def errorMsg
                 if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/_netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_WIN}"
                 } else {
-                    errorMsg = "Issue fetching from '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                    errorMsg = "Issue fetching from '${origin}'. ${PUSH_ISSUE_LIN}"
                 }
                 throw new GitflowException(errorMsg)
             }
@@ -296,12 +316,12 @@ class GitflowHotfix {
                 init.requireLocalBranchNotBehind(hotfixBranch, "${origin}/${hotfixBranch}") // local branch may have a commit containing the Maven version change that was not pushed to remote branch
             }
             if(init.gitRemoteBranchExists("${origin}/${develop}")){
-                init.requireBranchesEqual(develop, "${origin}/${develop}")
+                init.requireLocalBranchNotBehind(develop, "${origin}/${develop}") // local hotfix branch may have already been merged to local develop i.e. re-running finish after merge conflict
             }
         }
 
         // try to merge into develop
-        // in case a previous attempt to finish this release branch has failed,
+        // in case a previous attempt to finish this hotfix branch has failed,
         // but the merge into develop was successful, we skip it now
         if(!init.gitIsBranchMergedInto(hotfixBranch, develop)){
             log.info "Merging hotfix branch ${hotfixBranch} on ${develop}"
@@ -319,31 +339,9 @@ class GitflowHotfix {
 
                 init.executeLocal(["git", "merge", "-m", "\"${msg}\"", "${hotfixBranch}"])
             }
-        }
-
-        // push it
-        if(pushMerge && origin) {
-            def pushing = [develop]
-            for (branch in pushing) {
-                push(origin, branch)
-            }
-        }
-
-        if(origin && !keepRemote){
-            //Delete remote hotfix branch
-            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
-                init.executeRemote("git push ${origin} :${hotfixBranch}")
-            }
-        }
-
-        if (!keepLocal) {
-            if(init.gitIsBranchMergedInto(hotfixBranch, develop)){
-                def curr = init.gitCurrentBranch()
-                if(hotfixBranch == curr){
-                    init.executeLocal("git checkout ${develop}")
-                }
-                init.executeLocal("git branch -D ${hotfixBranch}")
-            }
+        } else {
+            log.warn "Hotfix branch ${hotfixBranch} has already been merged into ${develop}"
+            init.executeLocal("git checkout ${develop}")
         }
 
         log.info ""
@@ -354,80 +352,59 @@ class GitflowHotfix {
         log.info "- Hotfix branch has been merged into '${master}'"
         log.info "- The hotfix was tagged '${tagName}'"
         log.info "- Hotfix branch has been back-merged into '${develop}'"
-        if(keepLocal) {
-            log.info "- Local Hotfix branch '${hotfixBranch}' is still available"
-        }
-        else {
-            log.info "- Local Hotfix branch '${hotfixBranch}' has been deleted"
-        }
-        if(origin){
-            if(keepRemote) {
-                log.info "- Remote Hotfix branch '${hotfixBranch}' is still available from '${origin}'"
-            }
-            else {
-                log.info "- Remote Hotfix branch '${hotfixBranch}' has been deleted from '${origin}'"
-            }
-            if(pushMerge) {
-                log.info "- '${develop}', '${master}' and ${tagName} tag have been pushed to '${origin}'"
-            } else {
-                log.info ""
-                log.warn "===> Verify merge to ${develop} & ${master} before pushing!"
-                //Prompt user to push or not
-                Scanner scanner = new Scanner(System.in);
-                System.out.println("");
-                System.out.print("Do you want to push ${develop}, ${master} branches and tag ${tagName} to ${origin}? (y/N)");
-                String answer = scanner.nextLine();
-                if(answer.matches(/^([yY][eE][sS]|[yY])$/)) {
-                    log.info "Pushing tag ${tagName}"
-                    Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
-                    if(exitCodeTag){
-                        def errorMsg
-                        if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                            errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
-                        } else {
-                            errorMsg = "Issue pushing '${tagName}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
-                        }
-                        throw new GitflowException(errorMsg)
-                    }
-
-                    def pushing = [master,develop]
-                    for (branch in pushing) {
-                        push(origin, branch)
-                    }
-
-                    if(keepRemote){
-                        System.out.print("Do you want to delete the remote branch: ${origin}/${hotfixBranch}? (y/N)");
-                        String answer2 = scanner.nextLine();
-                        if (answer2.matches(/^([yY][eE][sS]|[yY])$/)) {
-                            //Delete remote hotfix branch
-                            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
-                                init.executeRemote("git push ${origin} :${hotfixBranch}")
-                            }
-                        }
-                    }
-
-                } else {
-                    log.info ""
-                    log.warn "===> Once happy with the merge you MUST manually push '${develop}', '${master}' and tag '${tagName}' to '${origin}':"
-                    log.warn ""
-                    log.warn "        git push ${origin} ${develop}"
-                    log.warn "        git push ${origin} ${master}"
-                    log.warn "        git push ${origin} ${tagName}"
-                    log.warn ""
-                    if(keepRemote) {
-                        log.warn ""
-                        log.warn "===> And manually delete the remote Hotfix branch '${hotfixBranch}':"
-                        log.warn ""
-                        log.warn "        git push ${origin} --delete ${hotfixBranch}"
-                    }
-                    log.info ""
-                }
-            }
-        }
         log.info ""
     }
 
-    void push(String origin, String branch) throws GitflowException {
+    void publish(String hotfixBranch, String tagName, boolean pushIt) throws GitCommandException, GitflowException {
+        def origin = init.getOrigin()
+        def develop = init.getDevelopBranch()
+        def master = init.getMasterBranch()
+        if(pushIt && origin){
+            log.info "Pushing tag ${tagName}"
+            Integer exitCodeTag = init.executeRemote("git push ${origin} ${tagName}")
+            if(exitCodeTag){
+                def errorMsg
+                if (System.properties['os.name'].toLowerCase().contains("windows")) {
+                    errorMsg = "Issue pushing '${tagName}' to '${origin}'. ${PUSH_ISSUE_WIN}"
+                } else {
+                    errorMsg = "Issue pushing '${tagName}' to '${origin}'. ${PUSH_ISSUE_LIN}"
+                }
+                throw new GitflowException(errorMsg)
+            }
+
+            def pushing = [master,develop]
+            for (branch in pushing) {
+                pushBranch(origin, branch)
+            }
+
+            log.info "Deleting ${hotfixBranch}"
+            init.executeLocal("git branch -D ${hotfixBranch}")
+
+            // Delete remote hotfix branch
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
+                log.info "Deleting ${origin}/${hotfixBranch}"
+                init.executeRemote("git push --delete ${origin} ${hotfixBranch}")
+            }
+
+        } else {
+            log.warn "===> Once happy with the merge you MUST manually push:"
+            log.warn ""
+            log.warn "        git push ${origin} ${develop}"
+            log.warn "        git push ${origin} ${master}"
+            log.warn "        git push ${origin} ${tagName}"
+            log.warn ""
+            log.warn ""
+            log.warn "===> And manually delete the hotfix branch:"
+            log.warn ""
+            log.warn "        git branch --delete ${hotfixBranch}"
+            if(init.gitRemoteBranchExists("${origin}/${hotfixBranch}")){
+                log.warn "        git push --delete ${origin} ${hotfixBranch}"
+            }
+            log.info ""
+        }
+    }
+
+    void pushBranch(String origin, String branch) throws GitCommandException, GitflowException {
         if(!init.gitRemoteBranchExists("${origin}/${branch}")){
             log.debug "Remote branch ${branch} does not exists. Skipping push"
             return;
@@ -437,13 +414,12 @@ class GitflowHotfix {
         if(exitCode){
             def errorMsg
             if (System.properties['os.name'].toLowerCase().contains("windows")) {
-                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your %USERPROFILE%\\_netrc file"
+                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. ${PUSH_ISSUE_WIN}"
             } else {
-                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. Please ensure your username and password is in your ~/.netrc file"
+                errorMsg = "Issue pushing branch '${branch}' to '${origin}'. ${PUSH_ISSUE_LIN}"
             }
             throw new GitflowException(errorMsg)
         }
     }
 
 }
-
