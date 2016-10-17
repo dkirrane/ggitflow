@@ -311,6 +311,16 @@ class GitflowCommon {
         return localTags.reverse(); // reverse here so latest tag is at index 0
     }
     
+    List gitLocalTagsOnBranch(String branch) {
+        // git tag
+        def localTags = []
+
+        def process = "git tag --sort=taggerdate --merged ${branch}".execute(envp, repoDir)
+        process.in.eachLine { line -> localTags.add(line.replaceAll("^(\\*\\s+|\\s+)", "")) }
+
+        return localTags.reverse(); // reverse here so latest tag is at index 0
+    }    
+    
     String gitLatestTagOnBranch() {
         def latestBranchTag = executeLocal("git describe --abbrev=0 --tags", true)
         return latestBranchTag;
